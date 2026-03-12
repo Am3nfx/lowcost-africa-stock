@@ -1,0 +1,2980 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LOW COST AFRICA — Gestion de Stock</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0c0e13;
+  --surface: #13161e;
+  --surface2: #1a1e2a;
+  --surface3: #222636;
+  --border: #2c3044;
+  --text: #e8eaf2;
+  --muted: #6b7196;
+  --fh: 'Outfit', sans-serif;
+  --fm: 'JetBrains Mono', monospace;
+
+  --admin-c: #ff6b00;
+  --admin-bg: rgba(255,107,0,0.1);
+  --b1-c: #00c9a7;
+  --b1-bg: rgba(0,201,167,0.1);
+  --b2-c: #e040fb;
+  --b2-bg: rgba(224,64,251,0.1);
+  --mag-c: #4f8ef7;
+  --mag-bg: rgba(79,142,247,0.1);
+
+  --ok: #22c55e;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--fh);font-size:14px;min-height:100vh}
+
+/* LOGIN SCREEN */
+#login-screen{
+  display:flex;align-items:center;justify-content:center;min-height:100vh;
+  background:var(--bg);
+  position:relative;overflow:hidden;
+}
+#login-screen::before{
+  content:'';position:absolute;width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(79,142,247,0.08) 0%,transparent 70%);
+  top:50%;left:50%;transform:translate(-50%,-50%);
+}
+.login-box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:40px;width:380px;max-width:95vw;
+  position:relative;z-index:1;
+  box-shadow:0 30px 80px rgba(0,0,0,0.5);
+}
+.login-logo{text-align:center;margin-bottom:32px}
+.login-logo h1{font-size:28px;font-weight:900;letter-spacing:-1px}
+.login-logo h1 span{color:var(--admin-c)}
+.login-logo p{color:var(--muted);font-size:12px;margin-top:4px}
+.login-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
+.site-btn{
+  width:100%;padding:14px 18px;border-radius:12px;border:1px solid var(--border);
+  background:var(--surface2);cursor:pointer;font-family:var(--fh);
+  display:flex;align-items:center;gap:14px;margin-bottom:10px;
+  transition:all 0.2s;text-align:left;
+}
+.site-btn:hover{transform:translateX(4px)}
+.site-btn .site-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.site-btn .site-info strong{display:block;font-size:14px;font-weight:700;color:var(--text)}
+.site-btn .site-info span{font-size:11px;color:var(--muted)}
+.site-btn .site-arrow{margin-left:auto;color:var(--muted)}
+.site-btn.admin-btn{border-color:var(--admin-c);background:var(--admin-bg)}
+.site-btn.admin-btn .site-dot{background:var(--admin-c)}
+.site-btn.b1-btn{border-color:rgba(0,201,167,0.3)}
+.site-btn.b1-btn:hover{border-color:var(--b1-c);background:var(--b1-bg)}
+.site-btn.b1-btn .site-dot{background:var(--b1-c)}
+.site-btn.b2-btn{border-color:rgba(224,64,251,0.3)}
+.site-btn.b2-btn:hover{border-color:var(--b2-c);background:var(--b2-bg)}
+.site-btn.b2-btn .site-dot{background:var(--b2-c)}
+
+/* APP */
+#app{display:none;min-height:100vh}
+
+/* TOP BAR */
+.topbar{
+  height:56px;background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 24px;gap:16px;
+  position:sticky;top:0;z-index:100;
+}
+.topbar-logo{font-size:18px;font-weight:900;letter-spacing:-0.5px;margin-right:8px}
+.topbar-logo span{color:var(--admin-c)}
+.site-pill{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;
+  border:1px solid currentColor;
+}
+.topbar-nav{display:flex;gap:2px;margin-left:auto}
+.nav-btn{
+  padding:7px 14px;border-radius:8px;border:none;
+  background:transparent;color:var(--muted);cursor:pointer;
+  font-family:var(--fh);font-size:13px;font-weight:500;transition:all 0.15s;
+  white-space:nowrap;
+}
+.nav-btn:hover{color:var(--text);background:var(--surface2)}
+.nav-btn.active{color:var(--text);background:var(--surface3)}
+.topbar-right{display:flex;align-items:center;gap:10px;margin-left:16px}
+.btn-logout{
+  padding:6px 14px;border-radius:8px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);cursor:pointer;font-family:var(--fh);
+  font-size:12px;transition:all 0.2s;
+}
+.btn-logout:hover{color:var(--danger);border-color:var(--danger)}
+
+/* CONTENT */
+.content{padding:28px 32px;max-width:1400px;margin:0 auto}
+.page{display:none;animation:fadeIn 0.25s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* PAGE HEADER */
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.ph-title{font-size:24px;font-weight:800;letter-spacing:-0.5px}
+.ph-sub{color:var(--muted);font-size:13px;margin-top:3px}
+.ph-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* STAT CARDS */
+.stats-row{display:grid;gap:14px;margin-bottom:24px}
+.stats-row.cols4{grid-template-columns:repeat(4,1fr)}
+.stats-row.cols3{grid-template-columns:repeat(3,1fr)}
+.stats-row.cols2{grid-template-columns:repeat(2,1fr)}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:18px 20px;transition:border-color 0.2s;
+}
+.stat-card:hover{border-color:var(--border)}
+.stat-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:600;margin-bottom:10px}
+.stat-val{font-size:26px;font-weight:800;font-family:var(--fm);letter-spacing:-1px}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.stat-row-sites{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.site-mini{display:flex;align-items:center;gap:5px;font-size:11px}
+.site-mini-dot{width:7px;height:7px;border-radius:50%}
+
+/* SITE OVERVIEW CARDS */
+.sites-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+.site-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;transition:border-color 0.2s;
+}
+.site-card:hover{border-color:var(--border)}
+.site-card-header{padding:16px 18px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.site-card-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.site-card-name{font-weight:700;font-size:15px}
+.site-card-type{font-size:11px;color:var(--muted)}
+.site-card-body{padding:14px 18px}
+.site-stat{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(44,48,68,0.5)}
+.site-stat:last-child{border:none}
+.site-stat-label{font-size:12px;color:var(--muted)}
+.site-stat-val{font-family:var(--fm);font-weight:500;font-size:13px}
+
+/* TABLE */
+.table-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px}
+.table-top{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px}
+.table-top-title{font-weight:700;font-size:14px}
+.table-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 16px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);font-weight:600;background:var(--surface2);border-bottom:1px solid var(--border)}
+td{padding:12px 16px;border-bottom:1px solid rgba(44,48,68,0.4);font-size:13px;vertical-align:middle}
+tr:last-child td{border:none}
+tr:hover td{background:rgba(79,142,247,0.03)}
+
+/* INPUTS */
+input[type=text],input[type=number],input[type=color],select,textarea{
+  background:var(--surface2);border:1px solid var(--border);color:var(--text);
+  padding:8px 12px;border-radius:8px;font-family:var(--fh);font-size:13px;
+  outline:none;transition:border-color 0.2s;width:100%;
+}
+input:focus,select:focus,textarea:focus{border-color:#4f8ef7}
+input::placeholder{color:var(--muted)}
+select option{background:var(--surface2)}
+
+/* BUTTONS */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:9px 16px;border-radius:8px;border:none;
+  cursor:pointer;font-family:var(--fh);font-size:13px;font-weight:600;
+  transition:all 0.2s;white-space:nowrap;
+}
+.btn svg{width:15px;height:15px;flex-shrink:0}
+.btn-primary{background:#4f8ef7;color:#fff}
+.btn-primary:hover{background:#3a7ef5;transform:translateY(-1px);box-shadow:0 4px 15px rgba(79,142,247,0.35)}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:#4f8ef7;color:#4f8ef7}
+.btn-danger{background:rgba(239,68,68,0.12);color:var(--danger);border:1px solid rgba(239,68,68,0.25)}
+.btn-danger:hover{background:var(--danger);color:#fff}
+.btn-transfer{background:rgba(255,107,0,0.12);color:var(--admin-c);border:1px solid rgba(255,107,0,0.25)}
+.btn-transfer:hover{background:var(--admin-c);color:#000}
+.btn-success{background:rgba(34,197,94,0.12);color:var(--ok);border:1px solid rgba(34,197,94,0.25)}
+.btn-success:hover{background:var(--ok);color:#000}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-icon{padding:6px}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.badge-ok{background:rgba(34,197,94,0.12);color:var(--ok)}
+.badge-warn{background:rgba(245,158,11,0.12);color:var(--warn)}
+.badge-danger{background:rgba(239,68,68,0.12);color:var(--danger)}
+.badge-blue{background:rgba(79,142,247,0.12);color:#4f8ef7}
+
+/* SITE BADGE inline */
+.sbadge{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+
+/* STOCK PER SITE MINI TABLE */
+.stock-sites-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.stock-site-chip{
+  display:flex;align-items:center;gap:5px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:3px 9px;font-size:12px;
+}
+.stock-site-chip .dot{width:7px;height:7px;border-radius:50%}
+.stock-site-chip .val{font-family:var(--fm);font-weight:500}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:999;backdrop-filter:blur(6px)}
+.overlay.open{display:flex;animation:fadeIn 0.2s}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:30px;width:500px;max-width:96vw;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 30px 80px rgba(0,0,0,0.5)}
+.modal h2{font-size:17px;font-weight:800;margin-bottom:20px}
+.modal-x{position:absolute;top:18px;right:18px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all 0.2s}
+.modal-x:hover{color:var(--text);background:var(--border)}
+.fg{margin-bottom:14px}
+.fl{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:5px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mf{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* TRANSFER VISUAL */
+.transfer-visual{
+  display:flex;align-items:center;gap:10px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;
+}
+.transfer-visual .arrow{color:var(--admin-c);font-size:18px;font-weight:900}
+.transfer-site{flex:1;text-align:center}
+.transfer-site strong{display:block;font-size:13px}
+.transfer-site span{font-size:11px;color:var(--muted)}
+
+/* TOAST */
+#toast{position:fixed;bottom:20px;right:20px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:12px 18px;border-radius:10px;font-size:13px;z-index:9999;display:none;box-shadow:0 10px 40px rgba(0,0,0,0.4);max-width:320px}
+#toast.show{display:block;animation:fadeIn 0.3s}
+#toast.ok{border-color:var(--ok);color:var(--ok)}
+#toast.err{border-color:var(--danger);color:var(--danger)}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px}
+
+/* PHOTO UPLOAD */
+.photo-upload-zone{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;background:var(--surface2)}
+.photo-upload-zone:hover{border-color:#4f8ef7;background:rgba(79,142,247,0.05)}
+.photo-upload-zone.has-photo{border-style:solid;border-color:var(--border);padding:0}
+.photo-upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.photo-preview{width:100%;height:160px;object-fit:cover;border-radius:10px;display:block}
+.photo-placeholder .icon{font-size:32px;margin-bottom:8px}
+.photo-placeholder p{font-size:12px;color:var(--muted)}
+.photo-placeholder span{font-size:11px;color:var(--border)}
+.photo-remove{position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);color:#fff;border:none;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;z-index:2;transition:background 0.2s}
+.photo-remove:hover{background:var(--danger)}
+.art-thumb{width:38px;height:38px;border-radius:8px;object-fit:cover;border:1px solid var(--border);flex-shrink:0}
+.art-thumb-placeholder{width:38px;height:38px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.art-cell{display:flex;align-items:center;gap:10px}
+
+/* ALERT STRIP */
+.alert-strip{display:flex;align-items:center;gap:12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:12px 16px;margin-bottom:14px}
+.alert-strip.red{background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.25)}
+.alert-strip-icon{font-size:18px}
+.alert-strip-text strong{display:block;font-size:13px;color:var(--text)}
+.alert-strip-text span{font-size:12px;color:var(--muted)}
+
+/* SECTION TITLE */
+.section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:20px 0}
+
+
+/* CATALOGUE */
+.cat-ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:18px}
+.cat-ref-card{
+  background:var(--surface2);border:1px solid var(--border);border-radius:12px;
+  overflow:hidden;cursor:pointer;transition:all 0.2s;position:relative;
+}
+.cat-ref-card:hover{border-color:var(--admin-c);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.3)}
+.cat-ref-card.already-added{border-color:var(--ok);opacity:0.6;cursor:default}
+.cat-ref-card.already-added:hover{transform:none;box-shadow:none}
+.cat-ref-img{width:100%;height:110px;object-fit:cover;display:block;background:var(--surface3)}
+.cat-ref-img-placeholder{width:100%;height:110px;display:flex;align-items:center;justify-content:center;font-size:36px;background:var(--surface3)}
+.cat-ref-body{padding:10px 12px}
+.cat-ref-code{font-family:var(--fm);font-size:10px;color:var(--admin-c);font-weight:500;margin-bottom:3px}
+.cat-ref-name{font-weight:700;font-size:13px;margin-bottom:2px}
+.cat-ref-meta{font-size:11px;color:var(--muted)}
+.cat-ref-check{position:absolute;top:8px;right:8px;background:var(--ok);color:#fff;width:22px;height:22px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px}
+.cat-ref-card.already-added .cat-ref-check{display:flex}
+.ref-search-bar{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.modal-wide{width:780px;max-width:97vw;padding:0}
+.modal-wide .modal-x{top:14px;right:14px;z-index:10}
+.modal-wide-header{padding:20px 24px 0;border-bottom:1px solid var(--border);padding-bottom:14px}
+.modal-wide-header h2{font-size:17px;font-weight:800;margin-bottom:0}
+.modal-wide-body{max-height:70vh;overflow-y:auto}
+.modal-wide-footer{padding:14px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+
+
+/* PRIX & INVENTAIRE */
+.prix-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;transition:border-color .2s}
+.prix-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;font-family:var(--fm)}
+.prix-badge.achat{background:rgba(79,142,247,.12);color:#4f8ef7}
+.prix-badge.vente{background:rgba(34,197,94,.12);color:var(--ok)}
+.prix-badge.marge{background:rgba(255,107,0,.12);color:var(--admin-c)}
+.prix-badge.promo{background:rgba(224,64,251,.12);color:var(--b2-c)}
+.marge-bar{height:6px;border-radius:3px;background:var(--surface2);overflow:hidden;margin-top:6px}
+.marge-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--ok),#16a34a);transition:width .4s}
+.marge-bar-fill.low{background:linear-gradient(90deg,var(--danger),#dc2626)}
+.marge-bar-fill.mid{background:linear-gradient(90deg,var(--warn),#d97706)}
+.inv-site-block{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px}
+.inv-site-header{padding:12px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.inv-site-title{font-weight:700;font-size:14px}
+.promo-row{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:10px}
+.prix-history-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(44,49,72,.4)}
+.prix-history-item:last-child{border:none}
+.print-only{display:none}
+@media print{
+  .topbar,.ph-actions,.btn,.nav-btn,.modal-x,.table-filters,.print-hide{display:none!important}
+  .print-only{display:block}
+  body{background:#fff;color:#000}
+  .surface,.table-box,.inv-site-block{background:#fff;border-color:#ccc}
+  .stat-val,.stat-label,.muted{color:#333}
+}
+
+/* ── AUTH SCREENS ─────────────────────────────── */
+.auth-screen{
+  display:none;align-items:center;justify-content:center;
+  min-height:100vh;background:var(--bg);position:relative;overflow:hidden;
+}
+.auth-screen.active{display:flex}
+.auth-screen::before{
+  content:'';position:absolute;width:700px;height:700px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,107,0,0.07) 0%,transparent 70%);
+  top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;
+}
+.auth-box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:22px;padding:40px;width:420px;max-width:96vw;
+  position:relative;z-index:1;box-shadow:0 30px 80px rgba(0,0,0,0.5);
+}
+.auth-logo{text-align:center;margin-bottom:28px}
+.auth-logo h1{font-size:26px;font-weight:900;letter-spacing:-1px}
+.auth-logo h1 span{color:var(--admin-c)}
+.auth-logo p{color:var(--muted);font-size:12px;margin-top:3px}
+.auth-title{font-size:18px;font-weight:800;margin-bottom:6px}
+.auth-sub{font-size:13px;color:var(--muted);margin-bottom:22px}
+.auth-fg{margin-bottom:14px}
+.auth-label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:5px}
+.auth-input{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);padding:11px 14px;border-radius:9px;
+  font-family:var(--fh);font-size:14px;outline:none;transition:border-color .2s;
+}
+.auth-input:focus{border-color:var(--admin-c)}
+.auth-input::placeholder{color:var(--muted)}
+.auth-btn{
+  width:100%;padding:13px;border-radius:10px;border:none;
+  background:var(--admin-c);color:#000;font-family:var(--fh);
+  font-size:14px;font-weight:800;cursor:pointer;transition:all .2s;margin-top:6px;
+}
+.auth-btn:hover{background:#ff8c2a;transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,107,0,.35)}
+.auth-btn.secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.auth-btn.secondary:hover{border-color:var(--admin-c);color:var(--admin-c);background:var(--surface2);box-shadow:none}
+.auth-divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:12px}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.auth-link{color:var(--admin-c);cursor:pointer;font-weight:600;text-decoration:none}
+.auth-link:hover{text-decoration:underline}
+.auth-error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--danger);border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:12px;display:none}
+.auth-error.show{display:block}
+.auth-success{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--ok);border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:12px;display:none}
+.auth-success.show{display:block}
+.otp-grid{display:flex;gap:10px;justify-content:center;margin:16px 0}
+.otp-input{
+  width:52px;height:58px;text-align:center;font-size:22px;font-weight:800;
+  font-family:var(--fm);background:var(--surface2);border:2px solid var(--border);
+  color:var(--text);border-radius:10px;outline:none;transition:border-color .2s;
+}
+.otp-input:focus{border-color:var(--admin-c)}
+.role-selector{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.role-option{
+  display:flex;align-items:center;gap:12px;padding:12px 16px;
+  border:1px solid var(--border);border-radius:10px;cursor:pointer;
+  background:var(--surface2);transition:all .2s;
+}
+.role-option:hover{border-color:var(--admin-c)}
+.role-option input[type=radio]{accent-color:var(--admin-c);width:16px;height:16px}
+.role-option-info strong{display:block;font-size:13px;font-weight:700}
+.role-option-info span{font-size:11px;color:var(--muted)}
+.role-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+/* Pending badge */
+.pending-badge{background:rgba(245,158,11,.15);color:var(--warn);border:1px solid rgba(245,158,11,.3);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700}
+.approved-badge{background:rgba(34,197,94,.15);color:var(--ok);border:1px solid rgba(34,197,94,.3);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700}
+/* Admin gestion users */
+.user-row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid rgba(44,49,72,.4)}
+.user-row:last-child{border:none}
+.user-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0}
+
+@media(max-width:900px){
+  .stats-row.cols4{grid-template-columns:repeat(2,1fr)}
+  .sites-grid{grid-template-columns:1fr}
+  .topbar-nav{display:none}
+  .content{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== LOGIN ==================== -->
+<!-- ══════════ SCREEN: LOGIN PRINCIPAL ══════════ -->
+<div id="screen-login" class="auth-screen active">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <h1>LOW COST<span> AFRICA</span></h1>
+      <p>Système de gestion de stock multi-sites</p>
+    </div>
+    <div class="auth-title">Connexion</div>
+    <div class="auth-sub">Entrez vos identifiants pour accéder</div>
+    <div class="auth-error" id="login-error"></div>
+    <div class="auth-fg">
+      <label class="auth-label">Adresse email</label>
+      <input class="auth-input" type="email" id="login-email" placeholder="votre@email.com" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="auth-fg">
+      <label class="auth-label">Mot de passe</label>
+      <input class="auth-input" type="password" id="login-pwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="auth-btn" onclick="doLogin()">Se connecter →</button>
+    <div class="auth-divider">ou</div>
+    <button class="auth-btn secondary" onclick="showScreen('screen-register')">Créer un compte vendeur</button>
+  </div>
+</div>
+
+<!-- ══════════ SCREEN: OTP (2FA Admin) ══════════ -->
+<div id="screen-otp" class="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <h1>LOW COST<span> AFRICA</span></h1>
+    </div>
+    <div class="auth-title">Double authentification</div>
+    <div class="auth-sub" id="otp-sub">Un code à 6 chiffres a été généré. Consultez la console (simulation email).</div>
+    <div class="auth-success show" id="otp-code-display" style="text-align:center;font-size:22px;font-family:var(--fm);letter-spacing:4px;font-weight:900"></div>
+    <div class="auth-error" id="otp-error"></div>
+    <div class="otp-grid">
+      <input class="otp-input" maxlength="1" id="otp0" oninput="otpMove(0)" onkeydown="otpBack(event,0)">
+      <input class="otp-input" maxlength="1" id="otp1" oninput="otpMove(1)" onkeydown="otpBack(event,1)">
+      <input class="otp-input" maxlength="1" id="otp2" oninput="otpMove(2)" onkeydown="otpBack(event,2)">
+      <input class="otp-input" maxlength="1" id="otp3" oninput="otpMove(3)" onkeydown="otpBack(event,3)">
+      <input class="otp-input" maxlength="1" id="otp4" oninput="otpMove(4)" onkeydown="otpBack(event,4)">
+      <input class="otp-input" maxlength="1" id="otp5" oninput="otpMove(5)" onkeydown="otpBack(event,5)">
+    </div>
+    <button class="auth-btn" onclick="verifyOtp()">Vérifier le code</button>
+    <div style="text-align:center;margin-top:14px">
+      <span style="font-size:13px;color:var(--muted)">Pas reçu ? </span>
+      <span class="auth-link" onclick="resendOtp()">Renvoyer le code</span>
+      &nbsp;|&nbsp;
+      <span class="auth-link" onclick="showScreen('screen-login')">← Retour</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SCREEN: INSCRIPTION VENDEUR ══════════ -->
+<div id="screen-register" class="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <h1>LOW COST<span> AFRICA</span></h1>
+    </div>
+    <div class="auth-title">Créer un compte vendeur</div>
+    <div class="auth-sub">Votre compte sera activé après validation par un administrateur</div>
+    <div class="auth-error" id="reg-error"></div>
+    <div class="auth-success" id="reg-success"></div>
+    <div class="auth-fg">
+      <label class="auth-label">Nom complet</label>
+      <input class="auth-input" type="text" id="reg-nom" placeholder="Prénom Nom">
+    </div>
+    <div class="auth-fg">
+      <label class="auth-label">Adresse email</label>
+      <input class="auth-input" type="email" id="reg-email" placeholder="votre@email.com">
+    </div>
+    <div class="auth-fg">
+      <label class="auth-label">Mot de passe</label>
+      <input class="auth-input" type="password" id="reg-pwd" placeholder="Min. 6 caractères">
+    </div>
+    <div class="auth-fg">
+      <label class="auth-label">Site d'affectation</label>
+      <div class="role-selector">
+        <label class="role-option">
+          <input type="radio" name="reg-site" value="boutique1" checked>
+          <div class="role-dot" style="background:var(--b1-c)"></div>
+          <div class="role-option-info"><strong>🏪 Gbégamey 1</strong><span>Point de vente Gbégamey 1</span></div>
+        </label>
+        <label class="role-option">
+          <input type="radio" name="reg-site" value="boutique2">
+          <div class="role-dot" style="background:var(--b2-c)"></div>
+          <div class="role-option-info"><strong>🏬 Gbégamey 2</strong><span>Point de vente Gbégamey 2</span></div>
+        </label>
+      </div>
+    </div>
+    <button class="auth-btn" onclick="doRegister()">Envoyer la demande</button>
+    <div style="text-align:center;margin-top:14px">
+      <span class="auth-link" onclick="showScreen('screen-login')">← Retour à la connexion</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SCREEN: EN ATTENTE ══════════ -->
+<div id="screen-pending" class="auth-screen">
+  <div class="auth-box" style="text-align:center">
+    <div style="font-size:52px;margin-bottom:16px">⏳</div>
+    <div class="auth-title">Compte en attente</div>
+    <div class="auth-sub" style="margin-bottom:24px">Votre compte est en cours de validation par un administrateur. Une fois approuvé, revenez vous connecter normalement.</div>
+    <button class="auth-btn" onclick="showScreen('screen-login')">← Retour à la connexion</button>
+  </div>
+</div>
+
+<!-- ==================== APP ==================== -->
+<div id="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-logo">LOW COST<span> AFRICA</span></div>
+    <div id="site-pill-wrap"></div>
+    <div class="topbar-nav" id="topbar-nav"></div>
+    <div class="topbar-right" id="topbar-user-info" style="display:flex;align-items:center;gap:8px">
+      <span id="topbar-username" style="font-size:12px;color:var(--muted)"></span>
+      <button class="btn-logout" onclick="logout()">⎋ Déconnexion</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ===== ADMIN PAGES ===== -->
+
+    <!-- ADMIN: Dashboard -->
+    <div id="page-admin-dashboard" class="page">
+      <div class="ph">
+        <div><div class="ph-title">Tableau de bord global</div><div class="ph-sub">Vue consolidée de tous vos sites</div></div>
+        <div class="ph-actions">
+          <button class="btn btn-ghost" onclick="openModal('modal-from-catalogue')">📋 Depuis catalogue</button>
+          <button class="btn btn-transfer" onclick="openModal('modal-transfer')">⇄ Transfert de stock</button>
+          <button class="btn btn-primary" onclick="openModal('modal-article')">+ Nouvel article</button>
+        </div>
+      </div>
+
+      <!-- Stats globales -->
+      <div class="stats-row cols4">
+        <div class="stat-card">
+          <div class="stat-label">Articles référencés</div>
+          <div class="stat-val" id="adm-total-arts">0</div>
+          <div class="stat-sub">dans le catalogue</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Stock total global</div>
+          <div class="stat-val" id="adm-total-stock">0</div>
+          <div class="stat-sub">toutes unités confondues</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Alertes actives</div>
+          <div class="stat-val" id="adm-alertes" style="color:var(--warn)">0</div>
+          <div class="stat-sub">stocks bas ou ruptures</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Mouvements aujourd'hui</div>
+          <div class="stat-val" id="adm-mvt-today">0</div>
+          <div class="stat-sub">entrées + sorties</div>
+        </div>
+      </div>
+
+      <!-- Sites cards -->
+      <div class="section-title">Situation par site</div>
+      <div class="sites-grid">
+        <div class="site-card" id="sc-magasin">
+          <div class="site-card-header">
+            <div class="site-card-dot" style="background:#4f8ef7"></div>
+            <div><div class="site-card-name">🏭 Magasin Central</div><div class="site-card-type">Dépôt principal</div></div>
+          </div>
+          <div class="site-card-body" id="sc-magasin-body"></div>
+        </div>
+        <div class="site-card" id="sc-b1">
+          <div class="site-card-header">
+            <div class="site-card-dot" style="background:var(--b1-c)"></div>
+            <div><div class="site-card-name">🏪 Gbégamey 1</div><div class="site-card-type">Point de vente</div></div>
+          </div>
+          <div class="site-card-body" id="sc-b1-body"></div>
+        </div>
+        <div class="site-card" id="sc-b2">
+          <div class="site-card-header">
+            <div class="site-card-dot" style="background:var(--b2-c)"></div>
+            <div><div class="site-card-name">🏬 Gbégamey 2</div><div class="site-card-type">Point de vente</div></div>
+          </div>
+          <div class="site-card-body" id="sc-b2-body"></div>
+        </div>
+      </div>
+
+      <!-- Stock consolidé -->
+      <div class="section-title">Stock consolidé par article</div>
+      <div class="table-box">
+        <div class="table-top">
+          <div class="table-top-title">Tous les articles — vue globale</div>
+          <div class="table-filters">
+            <input type="text" id="adm-search" placeholder="🔍 Rechercher..." oninput="renderAdminDash()" style="width:200px">
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Photo</th><th>Article</th><th>Catégorie</th><th>🏭 Magasin</th><th>🏪 Gbégamey 1</th><th>🏬 Gbégamey 2</th><th>Total</th><th>Statut</th></tr></thead>
+          <tbody id="adm-stock-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ADMIN: Mouvements -->
+    <div id="page-admin-mouvements" class="page">
+      <div class="ph">
+        <div><div class="ph-title">Historique complet</div><div class="ph-sub">Tous les mouvements — tous sites</div></div>
+        <div class="ph-actions">
+          <button class="btn btn-transfer" onclick="openModal('modal-transfer')">⇄ Transfert</button>
+        </div>
+      </div>
+      <div class="table-box">
+        <div class="table-top">
+          <div class="table-top-title">Journal des mouvements</div>
+          <div class="table-filters">
+            <input type="text" id="adm-mvt-search" placeholder="🔍 Rechercher..." oninput="renderAdminMvt()" style="width:180px">
+            <select id="adm-mvt-site" onchange="renderAdminMvt()" style="width:140px">
+              <option value="">Tous les sites</option>
+              <option value="magasin">Magasin</option>
+              <option value="boutique1">Gbégamey 1</option>
+              <option value="boutique2">Gbégamey 2</option>
+            </select>
+            <select id="adm-mvt-type" onchange="renderAdminMvt()" style="width:130px">
+              <option value="">Tous types</option>
+              <option value="entree">Entrées</option>
+              <option value="sortie">Sorties</option>
+              <option value="transfert">Transferts</option>
+            </select>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Date</th><th>Site</th><th>Article</th><th>Type</th><th>Qté</th><th>Avant</th><th>Après</th><th>Motif</th></tr></thead>
+          <tbody id="adm-mvt-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ADMIN: Articles -->
+    <div id="page-admin-articles" class="page">
+      <div class="ph">
+        <div><div class="ph-title">Catalogue articles</div><div class="ph-sub">Gérez le référentiel produits</div></div>
+        <div class="ph-actions">
+          <button class="btn btn-ghost" onclick="openModal('modal-from-catalogue')">📋 Depuis le catalogue</button>
+          <button class="btn btn-primary" onclick="openModal('modal-article')">+ Nouvel article</button>
+        </div>
+      </div>
+      <div class="table-box">
+        <div class="table-top">
+          <div class="table-top-title">Liste des articles</div>
+          <div class="table-filters">
+            <input type="text" id="adm-art-search" placeholder="🔍 Rechercher..." oninput="renderAdminArticles()" style="width:200px">
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Photo</th><th>Réf.</th><th>Désignation</th><th>Catégorie</th><th>Unité</th><th>Prix</th><th>Seuil alerte</th><th>Actions</th></tr></thead>
+          <tbody id="adm-art-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ADMIN: Alertes -->
+    <div id="page-admin-alertes" class="page">
+      <div class="ph">
+        <div><div class="ph-title">Alertes stock</div><div class="ph-sub">Articles nécessitant attention</div></div>
+      </div>
+      <div id="adm-alertes-list"></div>
+    </div>
+
+    <!-- ADMIN: Config -->
+    <div id="page-admin-config" class="page">
+      <div class="ph">
+        <div><div class="ph-title">Configuration</div><div class="ph-sub">Catégories et fournisseurs</div></div>
+        <div class="ph-actions">
+          <button class="btn btn-ghost" onclick="openModal('modal-categorie')">+ Catégorie</button>
+          <button class="btn btn-primary" onclick="openModal('modal-fournisseur')">+ Fournisseur</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <div class="section-title">Catégories</div>
+          <div id="cat-list"></div>
+        </div>
+        <div>
+          <div class="section-title">Fournisseurs</div>
+          <div id="four-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== BOUTIQUE PAGES ===== -->
+
+    <!-- BOUTIQUE: Dashboard -->
+    <div id="page-boutique-dashboard" class="page">
+      <div class="ph">
+        <div><div class="ph-title" id="bout-dash-title">Mon Stock</div><div class="ph-sub" id="bout-dash-sub">Stock de votre boutique</div></div>
+        <div class="ph-actions">
+          <button class="btn btn-ghost" onclick="openMvtVendeur('entree')">📥 Réception</button>
+          <button class="btn btn-primary" style="background:#ef4444;border-color:#ef4444" onclick="openMvtVendeur('sortie')">📤 Vente / Sortie</button>
+        </div>
+      </div>
+      <div class="stats-row cols3" id="bout-stats"></div>
+      <div id="bout-alertes-section"></div>
+      <div class="section-title">Stock de votre boutique</div>
+      <div class="table-box">
+        <div class="table-top">
+          <div class="table-top-title">Articles en stock</div>
+          <div class="table-filters">
+            <input type="text" id="bout-search" placeholder="🔍 Rechercher..." oninput="renderBoutiqueStock()" style="width:200px">
+            <select id="bout-filter-status" onchange="renderBoutiqueStock()" style="width:140px">
+              <option value="">Tous statuts</option>
+              <option value="ok">En stock</option>
+              <option value="low">Stock bas</option>
+              <option value="out">Rupture</option>
+            </select>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Photo</th><th>Réf.</th><th>Désignation</th><th>Catégorie</th><th>Stock</th><th>Seuil</th><th>Statut</th><th>Actions</th></tr></thead>
+          <tbody id="bout-stock-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- BOUTIQUE: Mouvements -->
+    <div id="page-boutique-mouvements" class="page">
+      <div class="ph">
+        <div><div class="ph-title">Mes mouvements</div><div class="ph-sub">Historique de votre boutique</div></div>
+        <div class="ph-actions">
+          <button class="btn btn-ghost" onclick="openMvtVendeur('entree')">📥 Réception</button>
+          <button class="btn btn-primary" style="background:#ef4444;border-color:#ef4444" onclick="openMvtVendeur('sortie')">📤 Vente / Sortie</button>
+        </div>
+      </div>
+      <div class="table-box">
+        <div class="table-top">
+          <div class="table-top-title">Journal</div>
+          <div class="table-filters">
+            <input type="text" id="bout-mvt-search" placeholder="🔍 Rechercher..." oninput="renderBoutiqueMvt()" style="width:180px">
+            <select id="bout-mvt-type" onchange="renderBoutiqueMvt()" style="width:130px">
+              <option value="">Tous types</option>
+              <option value="entree">Entrées</option>
+              <option value="sortie">Sorties</option>
+            </select>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Date</th><th>Article</th><th>Type</th><th>Quantité</th><th>Avant</th><th>Après</th><th>Motif</th></tr></thead>
+          <tbody id="bout-mvt-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+
+    <!-- ADMIN: Catalogue de références -->
+    <div id="page-admin-catalogue" class="page">
+      <div class="ph">
+        <div><div class="ph-title">Catalogue de <span style="color:var(--admin-c)">Références</span></div><div class="ph-sub">Créez vos fiches produits réutilisables — ajoutez en 1 clic</div></div>
+        <div class="ph-actions">
+          <button class="btn btn-primary" onclick="openModal('modal-catalogue-edit')">+ Nouvelle référence</button>
+        </div>
+      </div>
+      <div class="table-box">
+        <div class="table-top">
+          <div class="table-top-title">Références produits</div>
+          <div class="table-filters">
+            <input type="text" id="cat-search" placeholder="🔍 Rechercher..." oninput="renderCatalogue()" style="width:200px">
+            <select id="cat-filter-cat" onchange="renderCatalogue()" style="width:160px">
+              <option value="">Toutes catégories</option>
+            </select>
+          </div>
+        </div>
+        <div id="catalogue-grid" class="cat-ref-grid"></div>
+      </div>
+    </div>
+
+
+    <!-- ADMIN: Prix -->
+    <div id="page-admin-prix" class="page">
+      <div class="ph">
+        <div><div class="ph-title">Gestion des <span style="color:var(--admin-c)">Prix</span></div><div class="ph-sub">Prix d'achat, vente, marges et promotions</div></div>
+        <div class="ph-actions">
+          <input type="text" id="prix-search" placeholder="🔍 Rechercher..." oninput="renderPrix()" style="width:200px">
+        </div>
+      </div>
+      <!-- Récap global -->
+      <div class="stats-row cols3" id="prix-stats-row" style="margin-bottom:24px"></div>
+      <!-- Table prix -->
+      <div class="table-box">
+        <div class="table-top">
+          <div class="table-top-title">Tarification des articles</div>
+          <div class="table-filters">
+            <select id="prix-filter" onchange="renderPrix()" style="width:160px">
+              <option value="">Tous les articles</option>
+              <option value="promo">En promotion</option>
+              <option value="nomarge">Marge non définie</option>
+            </select>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Article</th><th>Prix achat</th><th>Prix vente</th><th>Marge</th><th>Promotion</th><th>Prix final</th><th>Actions</th></tr></thead>
+          <tbody id="prix-table"></tbody>
+        </table>
+      </div>
+      <!-- Historique des prix -->
+      <div class="section-title" style="margin-top:24px">Historique des changements de prix</div>
+      <div class="table-box">
+        <table>
+          <thead><tr><th>Date</th><th>Article</th><th>Type</th><th>Ancien prix</th><th>Nouveau prix</th><th>Par</th></tr></thead>
+          <tbody id="prix-history-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ADMIN: Inventaire -->
+    <div id="page-admin-inventaire" class="page">
+      <div class="ph">
+        <div><div class="ph-title">Inventaire du <span style="color:var(--admin-c)">Stock</span></div><div class="ph-sub">Valorisation, rapports par site et inventaire physique</div></div>
+        <div class="ph-actions print-hide">
+          <button class="btn btn-ghost" onclick="startInventairePhysique()">🔍 Inventaire physique</button>
+          <button class="btn btn-transfer" onclick="window.print()">🖨️ Imprimer</button>
+        </div>
+      </div>
+      <!-- Valeur globale -->
+      <div class="stats-row cols4" id="inv-stats-row" style="margin-bottom:24px"></div>
+      <!-- Tabs sites -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="inv-site-tabs">
+        <button class="btn btn-primary btn-sm" onclick="setInvSite('all')" id="inv-tab-all">🌐 Global</button>
+        <button class="btn btn-ghost btn-sm" onclick="setInvSite('magasin')" id="inv-tab-magasin">🏭 Magasin</button>
+        <button class="btn btn-ghost btn-sm" onclick="setInvSite('boutique1')" id="inv-tab-boutique1">🏪 Gbégamey 1</button>
+        <button class="btn btn-ghost btn-sm" onclick="setInvSite('boutique2')" id="inv-tab-boutique2">🏬 Gbégamey 2</button>
+      </div>
+      <div id="inv-content"></div>
+      <!-- Inventaire physique section -->
+      <div id="inv-physique-section" style="display:none">
+        <div class="section-title" style="margin-top:24px">🔍 Inventaire Physique — Saisie des quantités réelles</div>
+        <div style="background:rgba(255,107,0,.08);border:1px solid rgba(255,107,0,.3);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px">
+          ⚠️ Comptez vos articles physiquement puis saisissez les quantités réelles. Les écarts seront affichés en rouge.
+        </div>
+        <div class="table-box">
+          <div class="table-top">
+            <div class="table-top-title">Saisie inventaire physique</div>
+            <div class="table-filters">
+              <select id="inv-phys-site" onchange="renderInventairePhysique()" style="width:160px">
+                <option value="magasin">🏭 Magasin</option>
+                <option value="boutique1">🏪 Gbégamey 1</option>
+                <option value="boutique2">🏬 Gbégamey 2</option>
+              </select>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>Article</th><th>Stock système</th><th>Qté réelle comptée</th><th>Écart</th><th>Statut</th></tr></thead>
+            <tbody id="inv-phys-table"></tbody>
+          </table>
+          <div style="padding:14px 18px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end">
+            <button class="btn btn-ghost" onclick="cancelInventairePhysique()">Annuler</button>
+            <button class="btn btn-primary" onclick="validerInventairePhysique()">✅ Valider et ajuster le stock</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ADMIN: Gestion Utilisateurs -->
+    <div id="page-admin-users" class="page">
+      <div class="ph">
+        <div><div class="ph-title">Gestion des <span style="color:var(--admin-c)">Utilisateurs</span></div><div class="ph-sub">Admins, vendeurs et demandes en attente</div></div>
+        <div class="ph-actions">
+          <button class="btn btn-primary" onclick="openModal('modal-add-admin')">+ Ajouter un admin</button>
+        </div>
+      </div>
+      <!-- Demandes en attente -->
+      <div class="section-title">⏳ Demandes d'inscription en attente</div>
+      <div class="table-box" style="margin-bottom:20px">
+        <div id="pending-users-list"></div>
+      </div>
+      <!-- Admins -->
+      <div class="section-title">👑 Administrateurs</div>
+      <div class="table-box" style="margin-bottom:20px">
+        <div id="admin-users-list"></div>
+      </div>
+      <!-- Vendeurs actifs -->
+      <div class="section-title">✅ Vendeurs actifs</div>
+      <div class="table-box">
+        <div id="active-users-list"></div>
+      </div>
+    </div>
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<!-- ==================== MODALS ==================== -->
+
+<!-- Modal Article (admin only) -->
+<div id="modal-article" class="overlay">
+  <div class="modal">
+    <div class="modal-x" onclick="closeModal('modal-article')">✕</div>
+    <h2 id="modal-art-title">Nouvel Article</h2>
+    <input type="hidden" id="art-id">
+    <div class="frow">
+      <div class="fg"><label class="fl">Référence</label><input type="text" id="art-ref" placeholder="ART-001"></div>
+      <div class="fg"><label class="fl">Désignation *</label><input type="text" id="art-nom" placeholder="Nom du produit"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Catégorie</label><select id="art-cat"></select></div>
+      <div class="fg"><label class="fl">Fournisseur</label><select id="art-four"></select></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Unité</label><input type="text" id="art-unite" placeholder="pièce, kg, litre..."></div>
+      <div class="fg"><label class="fl">Prix unitaire (FCFA)</label><input type="number" id="art-prix" value="0" min="0"></div>
+    </div>
+    <div class="fg"><label class="fl">Seuil d'alerte (par site)</label><input type="number" id="art-seuil" value="5" min="0"></div>
+    <div class="fg" style="margin-top:4px">
+      <label class="fl">Photos de l'article <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(max 3 — la 1ère est la principale)</span></label>
+      <div id="photos-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px"></div>
+      <div id="photos-add-btn" class="photo-upload-zone" style="height:60px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:var(--muted)" onclick="document.getElementById('art-photo-input').click()">
+        <input type="file" id="art-photo-input" accept="image/*" multiple style="display:none" onchange="handlePhotoUpload(event)">
+        <span style="font-size:20px">📷</span> Ajouter des photos
+      </div>
+    </div>
+    <div class="section-title" style="margin-top:16px">Stock initial par site</div>
+    <div class="frow">
+      <div class="fg"><label class="fl">🏭 Magasin</label><input type="number" id="art-stock-mag" value="0" min="0"></div>
+      <div class="fg"><label class="fl">🏪 Gbégamey 1</label><input type="number" id="art-stock-b1" value="0" min="0"></div>
+    </div>
+    <div class="fg"><label class="fl">🏬 Gbégamey 2</label><input type="number" id="art-stock-b2" value="0" min="0"></div>
+    <div class="mf">
+      <button class="btn btn-ghost" onclick="closeModal('modal-article')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveArticle()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal Catalogue Edit -->
+<div id="modal-catalogue-edit" class="overlay">
+  <div class="modal">
+    <div class="modal-x" onclick="closeModal('modal-catalogue-edit')">✕</div>
+    <h2 id="modal-cat-edit-title">Nouvelle Référence Produit</h2>
+    <input type="hidden" id="cref-id">
+    <div class="frow">
+      <div class="fg"><label class="fl">Code référence *</label><input type="text" id="cref-code" placeholder="EX: LCA-001"></div>
+      <div class="fg"><label class="fl">Désignation *</label><input type="text" id="cref-nom" placeholder="Nom du produit"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Catégorie</label><select id="cref-cat"></select></div>
+      <div class="fg"><label class="fl">Fournisseur</label><select id="cref-four"></select></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Unité</label><input type="text" id="cref-unite" placeholder="pièce, kg, litre..."></div>
+      <div class="fg"><label class="fl">Prix unitaire (FCFA)</label><input type="number" id="cref-prix" value="0" min="0"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Seuil d'alerte</label><input type="number" id="cref-seuil" value="5" min="0"></div>
+      <div class="fg"><label class="fl">Description</label><input type="text" id="cref-desc" placeholder="Description courte..."></div>
+    </div>
+    <div class="fg" style="margin-top:4px">
+      <label class="fl">Photo</label>
+      <div class="photo-upload-zone" id="cref-photo-zone" onclick="document.getElementById('cref-photo-input').click()">
+        <input type="file" id="cref-photo-input" accept="image/*" style="display:none" onchange="handleCrefPhoto(event)">
+        <div class="photo-placeholder" id="cref-photo-placeholder">
+          <div class="icon">📷</div>
+          <p>Cliquez pour ajouter une photo</p>
+          <span>JPG, PNG, WEBP</span>
+        </div>
+        <img id="cref-photo-preview" class="photo-preview" style="display:none" alt="Aperçu">
+        <button type="button" class="photo-remove" id="cref-photo-remove" style="display:none" onclick="removeCrefPhoto(event)">✕</button>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-ghost" onclick="closeModal('modal-catalogue-edit')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveCatalogue()">Enregistrer la référence</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Ajouter depuis catalogue -->
+<div id="modal-from-catalogue" class="overlay">
+  <div class="modal modal-wide">
+    <div class="modal-x" onclick="closeModal('modal-from-catalogue')">✕</div>
+    <div class="modal-wide-header">
+      <h2>📋 Ajouter depuis le catalogue</h2>
+      <p style="font-size:12px;color:var(--muted);margin-top:4px">Cliquez sur une référence pour l'ajouter au stock</p>
+    </div>
+    <div class="ref-search-bar">
+      <input type="text" id="fromcat-search" placeholder="🔍 Rechercher une référence..." oninput="renderFromCatalogue()" style="flex:1;max-width:280px">
+      <select id="fromcat-cat" onchange="renderFromCatalogue()" style="width:160px">
+        <option value="">Toutes catégories</option>
+      </select>
+    </div>
+    <div class="modal-wide-body">
+      <div id="fromcat-grid" class="cat-ref-grid" style="padding:14px"></div>
+    </div>
+    <div class="modal-wide-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-from-catalogue')">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Confirmer ajout depuis catalogue -->
+<div id="modal-confirm-from-cat" class="overlay">
+  <div class="modal" style="width:460px">
+    <div class="modal-x" onclick="closeModal('modal-confirm-from-cat')">✕</div>
+    <h2>Ajouter cet article au stock</h2>
+    <div id="confirm-ref-preview" style="display:flex;align-items:center;gap:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px"></div>
+    <input type="hidden" id="confirm-ref-id">
+    <div class="section-title">Stock initial par site</div>
+    <div class="frow">
+      <div class="fg"><label class="fl">🏭 Magasin</label><input type="number" id="confirm-stock-mag" value="0" min="0"></div>
+      <div class="fg"><label class="fl">🏪 Gbégamey 1</label><input type="number" id="confirm-stock-b1" value="0" min="0"></div>
+    </div>
+    <div class="fg"><label class="fl">🏬 Gbégamey 2</label><input type="number" id="confirm-stock-b2" value="0" min="0"></div>
+    <div class="mf">
+      <button class="btn btn-ghost" onclick="closeModal('modal-confirm-from-cat')">Annuler</button>
+      <button class="btn btn-primary" onclick="confirmAddFromCatalogue()">✅ Ajouter au stock</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal Prix Article -->
+<div id="modal-prix" class="overlay">
+  <div class="modal">
+    <div class="modal-x" onclick="closeModal('modal-prix')">✕</div>
+    <h2 id="modal-prix-title">Modifier les prix</h2>
+    <input type="hidden" id="prix-art-id">
+    <div id="modal-prix-article-info" style="display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:16px"></div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Prix d'achat (FCFA)</label><input type="number" id="prix-achat" placeholder="0" min="0" oninput="calcMarge()"></div>
+      <div class="fg"><label class="fl">Prix de vente (FCFA)</label><input type="number" id="prix-vente" placeholder="0" min="0" oninput="calcMarge()"></div>
+    </div>
+    <div id="marge-preview" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;display:none"></div>
+    <div class="section-title">Promotion (optionnel)</div>
+    <div class="promo-row">
+      <input type="checkbox" id="prix-promo-active" onchange="togglePromo()" style="width:16px;height:16px;cursor:pointer;flex-shrink:0">
+      <label style="font-size:13px;cursor:pointer" for="prix-promo-active">Activer une promotion</label>
+    </div>
+    <div id="promo-fields" style="display:none">
+      <div class="frow">
+        <div class="fg">
+          <label class="fl">Type de réduction</label>
+          <select id="prix-promo-type" onchange="calcMarge()" style="width:100%">
+            <option value="pct">Pourcentage (%)</option>
+            <option value="fixe">Montant fixe (FCFA)</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Valeur de la réduction</label><input type="number" id="prix-promo-val" placeholder="0" min="0" oninput="calcMarge()"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Date début</label><input type="date" id="prix-promo-debut" class="form-control" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-family:var(--fh);font-size:13px;width:100%"></div>
+        <div class="fg"><label class="fl">Date fin</label><input type="date" id="prix-promo-fin" class="form-control" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-family:var(--fh);font-size:13px;width:100%"></div>
+      </div>
+      <div id="promo-result" style="background:rgba(224,64,251,.08);border:1px solid rgba(224,64,251,.25);border-radius:8px;padding:10px 14px;font-size:13px;margin-top:4px"></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-ghost" onclick="closeModal('modal-prix')">Annuler</button>
+      <button class="btn btn-primary" onclick="savePrix()">Enregistrer les prix</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Mouvement (boutique) -->
+<div id="modal-mvt" class="overlay">
+  <div class="modal">
+    <div class="modal-x" onclick="closeModal('modal-mvt')">✕</div>
+    <h2 id="mvt-modal-title">Enregistrer un mouvement</h2>
+    <div id="mvt-type-badge" style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;margin-bottom:16px"></div>
+    <input type="hidden" id="mvt-type" value="entree">
+    <div class="fg"><label class="fl">Article *</label><select id="mvt-art" onchange="updateMvtInfo()" style="width:100%"></select></div>
+    <div class="fg" id="mvt-stock-info" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted)">Sélectionnez un article</div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Quantité *</label><input type="number" id="mvt-qte" value="1" min="1"></div>
+      <div class="fg"><label class="fl">Motif</label><input type="text" id="mvt-motif" placeholder="Vente, livraison..."></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-ghost" onclick="closeModal('modal-mvt')">Annuler</button>
+      <button class="btn btn-primary" id="mvt-confirm-btn" onclick="saveMvt()">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Transfert (admin) -->
+<div id="modal-transfer" class="overlay">
+  <div class="modal">
+    <div class="modal-x" onclick="closeModal('modal-transfer')">✕</div>
+    <h2>Transfert de stock entre sites</h2>
+    <div class="fg"><label class="fl">Article *</label><select id="tr-art" onchange="updateTransferInfo()" style="width:100%"></select></div>
+    <div class="frow">
+      <div class="fg">
+        <label class="fl">Site source *</label>
+        <select id="tr-from" onchange="updateTransferInfo()" style="width:100%">
+          <option value="">-- Choisir --</option>
+          <option value="magasin">🏭 Magasin</option>
+          <option value="boutique1">🏪 Gbégamey 1</option>
+          <option value="boutique2">🏬 Gbégamey 2</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Site destination *</label>
+        <select id="tr-to" style="width:100%">
+          <option value="">-- Choisir --</option>
+          <option value="magasin">🏭 Magasin</option>
+          <option value="boutique1">🏪 Gbégamey 1</option>
+          <option value="boutique2">🏬 Gbégamey 2</option>
+        </select>
+      </div>
+    </div>
+    <div id="tr-info" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:14px">Sélectionnez un article et un site source</div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Quantité *</label><input type="number" id="tr-qte" value="1" min="1"></div>
+      <div class="fg"><label class="fl">Motif</label><input type="text" id="tr-motif" placeholder="Réapprovisionnement..."></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-ghost" onclick="closeModal('modal-transfer')">Annuler</button>
+      <button class="btn btn-transfer" onclick="saveTransfer()">Effectuer le transfert</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Catégorie -->
+<div id="modal-categorie" class="overlay">
+  <div class="modal" style="width:360px">
+    <div class="modal-x" onclick="closeModal('modal-categorie')">✕</div>
+    <h2 id="modal-cat-title">Nouvelle Catégorie</h2>
+    <input type="hidden" id="cat-id">
+    <div class="fg"><label class="fl">Nom *</label><input type="text" id="cat-nom" placeholder="Ex: Électronique"></div>
+    <div class="fg"><label class="fl">Couleur</label><input type="color" id="cat-couleur" value="#4f8ef7" style="height:42px;cursor:pointer"></div>
+    <div class="mf">
+      <button class="btn btn-ghost" onclick="closeModal('modal-categorie')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveCategorie()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Fournisseur -->
+<div id="modal-fournisseur" class="overlay">
+  <div class="modal">
+    <div class="modal-x" onclick="closeModal('modal-fournisseur')">✕</div>
+    <h2 id="modal-four-title">Nouveau Fournisseur</h2>
+    <input type="hidden" id="four-id">
+    <div class="fg"><label class="fl">Nom *</label><input type="text" id="four-nom" placeholder="Nom de la société"></div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Contact</label><input type="text" id="four-contact" placeholder="Responsable"></div>
+      <div class="fg"><label class="fl">Téléphone</label><input type="text" id="four-tel" placeholder="+229..."></div>
+    </div>
+    <div class="fg"><label class="fl">Email</label><input type="text" id="four-email" placeholder="email@exemple.com"></div>
+    <div class="mf">
+      <button class="btn btn-ghost" onclick="closeModal('modal-fournisseur')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveFournisseur()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal Ajouter Admin -->
+<div id="modal-add-admin" class="overlay">
+  <div class="modal" style="width:420px">
+    <div class="modal-x" onclick="closeModal('modal-add-admin')">✕</div>
+    <h2>Ajouter un Administrateur</h2>
+    <div class="auth-error" id="add-admin-error"></div>
+    <div class="fg"><label class="fl">Nom complet</label><input type="text" id="new-admin-nom" class="auth-input" placeholder="Prénom Nom"></div>
+    <div class="fg"><label class="fl">Email</label><input type="email" id="new-admin-email" class="auth-input" placeholder="admin@lowcostafrica.com"></div>
+    <div class="fg"><label class="fl">Mot de passe</label><input type="password" id="new-admin-pwd" class="auth-input" placeholder="Min. 6 caractères"></div>
+    <div class="mf">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-admin')">Annuler</button>
+      <button class="btn btn-primary" onclick="addAdmin()">Créer le compte admin</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Changer site vendeur -->
+<div id="modal-change-site" class="overlay">
+  <div class="modal" style="width:400px">
+    <div class="modal-x" onclick="closeModal('modal-change-site')">✕</div>
+    <h2>Changer l'affectation du vendeur</h2>
+    <input type="hidden" id="change-site-vendor-id">
+    <div id="change-site-vendor-info" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px"></div>
+    <div class="fg">
+      <label class="fl">Nouvelle boutique</label>
+      <div class="role-selector" id="change-site-selector">
+        <label class="role-option">
+          <input type="radio" name="change-site" value="boutique1">
+          <div class="role-dot" style="background:var(--b1-c)"></div>
+          <div class="role-option-info"><strong>🏪 Gbégamey 1</strong><span>Point de vente Gbégamey 1</span></div>
+        </label>
+        <label class="role-option">
+          <input type="radio" name="change-site" value="boutique2">
+          <div class="role-dot" style="background:var(--b2-c)"></div>
+          <div class="role-option-info"><strong>🏬 Gbégamey 2</strong><span>Point de vente Gbégamey 2</span></div>
+        </label>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-ghost" onclick="closeModal('modal-change-site')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveChangeSite()">✅ Confirmer le changement</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// =========================================================
+//  DATA
+// =========================================================
+const DB = 'lowcost_africa_v1';
+let db = { articles: [], mouvements: [], categories: [], fournisseurs: [], catalogue: [] };
+let currentRole = null; // 'admin' | 'boutique1' | 'boutique2'
+
+const SITES = {
+  magasin:   { label: 'Magasin',      icon: '🏭', color: '#4f8ef7' },
+  boutique1: { label: 'Gbégamey 1',   icon: '🏪', color: 'var(--b1-c)' },
+  boutique2: { label: 'Gbégamey 2',   icon: '🏬', color: 'var(--b2-c)' }
+};
+
+const DEFAULT_CATEGORIES = [
+  { id:'cat-elec',  nom:'Électroménager', couleur:'#f59e0b' },
+  { id:'cat-out',   nom:'Outillage',      couleur:'#ef4444' },
+  { id:'cat-lum',   nom:'Luminaire',      couleur:'#fbbf24' },
+  { id:'cat-meu',   nom:'Meuble',         couleur:'#a78bfa' },
+  { id:'cat-info',  nom:'Informatique',   couleur:'#4f8ef7' },
+  { id:'cat-sono',  nom:'Sonorisation',   couleur:'#e040fb' },
+  { id:'cat-sport', nom:'Sport',          couleur:'#00c9a7' },
+  { id:'cat-vais',  nom:'Vaisselle',      couleur:'#f97316' },
+];
+
+function loadDB() {
+  try { const s = localStorage.getItem(DB); if(s) db = JSON.parse(s); } catch(e){}
+  // Injecter les catégories par défaut si absentes
+  DEFAULT_CATEGORIES.forEach(def => {
+    if (!db.categories.find(c => c.id === def.id)) {
+      db.categories.push({...def});
+    }
+  });
+  saveDB();
+}
+function saveDB() {
+  try { localStorage.setItem(DB, JSON.stringify(db)); } catch(e){}
+}
+function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function fmt(n) { return new Intl.NumberFormat('fr-FR').format(n||0); }
+function fmtDate(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+}
+function fmtDateShort(ts) { return new Date(ts).toLocaleDateString('fr-FR'); }
+function today() { return new Date().toDateString(); }
+
+// =========================================================
+//  AUTH
+// =========================================================
+
+// =========================================================
+//  AUTH SYSTEM
+// =========================================================
+function pwdEncode(str) {
+  // Encodage UTF-8 sûr (btoa échoue avec les accents/spéciaux)
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function pwdDecode(str) {
+  try { return decodeURIComponent(escape(atob(str))); } catch(e) { return ''; }
+}
+
+const AUTH_KEY = 'lca_auth_v1';
+let authData = { admins: [], vendors: [], pending: [] };
+let currentUser = null;
+let otpCode = null;
+let otpEmail = null;
+
+function loadAuth() {
+  try {
+    const s = localStorage.getItem(AUTH_KEY);
+    if (s) authData = JSON.parse(s);
+    // Create default super admin if none exists
+    if (!authData.admins || !authData.admins.length) {
+      authData.admins = [{
+        id: 'admin-default',
+        nom: 'Super Admin',
+        email: 'admin@lowcostafrica.com',
+        pwd: pwdEncode('L@wC@st2k26$'),
+        role: 'admin',
+        createdAt: Date.now()
+      }];
+      saveAuth();
+    }
+    if (!authData.vendors) authData.vendors = [];
+    if (!authData.pending) authData.pending = [];
+  } catch(e) {}
+}
+
+function saveAuth() {
+  try { localStorage.setItem(AUTH_KEY, JSON.stringify(authData)); } catch(e) {}
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+function doLogin() {
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const pwd = document.getElementById('login-pwd').value;
+  const errEl = document.getElementById('login-error');
+  errEl.classList.remove('show');
+  if (!email || !pwd) { errEl.textContent = 'Veuillez remplir tous les champs'; errEl.classList.add('show'); return; }
+  // Relire localStorage pour avoir les dernières données (approbation admin depuis un autre onglet)
+  try {
+    const s = localStorage.getItem(AUTH_KEY);
+    if (s) {
+      const fresh = JSON.parse(s);
+      if (fresh.admins) authData.admins = fresh.admins;
+      if (fresh.vendors) authData.vendors = fresh.vendors;
+      if (fresh.pending) authData.pending = fresh.pending;
+    }
+  } catch(e) {}
+
+  // Check admin
+  const admin = authData.admins.find(a => {
+    const decoded = pwdDecode(a.pwd);
+    // Compat ancienne version (btoa simple sans UTF-8)
+    let oldDecoded = '';
+    try { oldDecoded = atob(a.pwd); } catch(e) {}
+    return a.email.toLowerCase() === email && (decoded === pwd || oldDecoded === pwd);
+  });
+  if (admin) {
+    // Mettre à jour le mot de passe avec le nouvel encodage si besoin
+    const oldDecoded = (() => { try { return atob(admin.pwd); } catch(e) { return ''; } })();
+    if (oldDecoded === pwd && pwdDecode(admin.pwd) !== pwd) {
+      admin.pwd = pwdEncode(pwd); saveAuth();
+    }
+    // Trigger 2FA
+    otpEmail = email;
+    otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    currentUser = admin;
+    document.getElementById('otp-code-display').textContent = '🔑 ' + otpCode;
+    document.getElementById('otp-sub').textContent = `Code de vérification pour ${email} (simulation — dans la vraie vie il serait envoyé par email)`;
+    for (let i=0;i<6;i++) document.getElementById('otp'+i).value='';
+    document.getElementById('otp-error').classList.remove('show');
+    showScreen('screen-otp');
+    setTimeout(()=>document.getElementById('otp0').focus(), 200);
+    return;
+  }
+
+  // Check vendor
+  const vendor = authData.vendors.find(v => {
+    const decoded = pwdDecode(v.pwd);
+    let oldDecoded = '';
+    try { oldDecoded = atob(v.pwd); } catch(e) {}
+    return v.email.toLowerCase() === email && (decoded === pwd || oldDecoded === pwd);
+  });
+  if (vendor) {
+    // Migrer le mot de passe si encodage ancien
+    const oldDecoded = (() => { try { return atob(vendor.pwd); } catch(e) { return ''; } })();
+    if (oldDecoded === pwd && pwdDecode(vendor.pwd) !== pwd) {
+      vendor.pwd = pwdEncode(pwd); saveAuth();
+    }
+    loginSuccess(vendor);
+    return;
+  }
+
+  // Check pending
+  const pending = authData.pending.find(p => p.email.toLowerCase() === email);
+  if (pending) { showScreen('screen-pending'); return; }
+
+  errEl.textContent = 'Email ou mot de passe incorrect';
+  errEl.classList.add('show');
+}
+
+function otpMove(i) {
+  const val = document.getElementById('otp'+i).value;
+  if (val && i < 5) document.getElementById('otp'+(i+1)).focus();
+  // auto verify when last digit filled
+  if (i === 5 && val) setTimeout(verifyOtp, 100);
+}
+
+function otpBack(e, i) {
+  if (e.key === 'Backspace' && !document.getElementById('otp'+i).value && i > 0) {
+    document.getElementById('otp'+(i-1)).focus();
+  }
+}
+
+function verifyOtp() {
+  const entered = Array.from({length:6}, (_,i) => document.getElementById('otp'+i).value).join('');
+  const errEl = document.getElementById('otp-error');
+  if (entered !== otpCode) {
+    errEl.textContent = 'Code incorrect. Réessayez.';
+    errEl.classList.add('show');
+    return;
+  }
+  errEl.classList.remove('show');
+  otpCode = null;
+  loginSuccess(currentUser);
+}
+
+function resendOtp() {
+  otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+  document.getElementById('otp-code-display').textContent = '🔑 ' + otpCode;
+  showToast('Nouveau code généré ✓','ok');
+}
+
+function loginSuccess(user) {
+  currentUser = user;
+  currentRole = user.role === 'admin' ? 'admin' : user.site;
+  // Hide all auth screens
+  document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('app').style.display = 'block';
+  setupTopbar();
+  renderAll();
+  showPage(currentRole === 'admin' ? 'admin-dashboard' : 'boutique-dashboard');
+  // Show pending badge if admin
+  if (currentRole === 'admin') {
+    renderUsers(); // triggers badge update
+  }
+}
+
+function logout() {
+  currentRole = null;
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-pwd').value = '';
+  document.getElementById('login-error').classList.remove('show');
+  showScreen('screen-login');
+}
+
+function doRegister() {
+  const nom = document.getElementById('reg-nom').value.trim();
+  const email = document.getElementById('reg-email').value.trim().toLowerCase();
+  const pwd = document.getElementById('reg-pwd').value;
+  const site = document.querySelector('input[name="reg-site"]:checked').value;
+  const errEl = document.getElementById('reg-error');
+  const okEl = document.getElementById('reg-success');
+  errEl.classList.remove('show'); okEl.classList.remove('show');
+  if (!nom || !email || !pwd) { errEl.textContent = 'Tous les champs sont obligatoires'; errEl.classList.add('show'); return; }
+  if (pwd.length < 6) { errEl.textContent = 'Mot de passe trop court (min. 6 caractères)'; errEl.classList.add('show'); return; }
+  const exists = [...authData.admins, ...authData.vendors, ...authData.pending].find(u => u.email.toLowerCase()===email);
+  if (exists) { errEl.textContent = 'Cet email est déjà utilisé'; errEl.classList.add('show'); return; }
+  authData.pending.push({ id:uid(), nom, email, pwd:pwdEncode(pwd), site, role:site, createdAt:Date.now() });
+  saveAuth();
+  okEl.textContent = 'Demande envoyée ! Un admin va valider votre compte sous peu.';
+  okEl.classList.add('show');
+  setTimeout(()=>{ showScreen('screen-login'); }, 2500);
+}
+
+function addAdmin() {
+  const nom = document.getElementById('new-admin-nom').value.trim();
+  const email = document.getElementById('new-admin-email').value.trim().toLowerCase();
+  const pwd = document.getElementById('new-admin-pwd').value;
+  const errEl = document.getElementById('add-admin-error');
+  errEl.classList.remove('show');
+  if (!nom||!email||!pwd) { errEl.textContent='Tous les champs sont requis'; errEl.classList.add('show'); return; }
+  if (pwd.length<6) { errEl.textContent='Mot de passe min. 6 caractères'; errEl.classList.add('show'); return; }
+  const exists = [...authData.admins,...authData.vendors,...authData.pending].find(u=>u.email.toLowerCase()===email);
+  if (exists) { errEl.textContent='Email déjà utilisé'; errEl.classList.add('show'); return; }
+  authData.admins.push({ id:uid(), nom, email, pwd:pwdEncode(pwd), role:'admin', createdAt:Date.now() });
+  saveAuth(); renderUsers(); closeModal('modal-add-admin');
+  showToast('Admin ajouté ✓','ok');
+  document.getElementById('new-admin-nom').value='';
+  document.getElementById('new-admin-email').value='';
+  document.getElementById('new-admin-pwd').value='';
+}
+
+function openChangeSiteModal(vendorId) {
+  const vendor = authData.vendors.find(v => v.id === vendorId);
+  if (!vendor) return;
+  document.getElementById('change-site-vendor-id').value = vendorId;
+  const siteConf = SITES[vendor.site] || {};
+  document.getElementById('change-site-vendor-info').innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="user-avatar" style="background:rgba(0,201,167,.12);color:var(--b1-c);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">${vendor.nom[0].toUpperCase()}</div>
+      <div>
+        <strong>${vendor.nom}</strong>
+        <div style="font-size:12px;color:var(--muted)">${vendor.email}</div>
+        <div style="font-size:11px;margin-top:2px">Site actuel : <strong style="color:var(--warn)">${siteConf.icon||''} ${siteConf.label||vendor.site}</strong></div>
+      </div>
+    </div>`;
+  // Pre-select current site
+  document.querySelectorAll('input[name="change-site"]').forEach(r => {
+    r.checked = r.value === vendor.site;
+  });
+  document.getElementById('modal-change-site').classList.add('open');
+}
+
+function saveChangeSite() {
+  const vendorId = document.getElementById('change-site-vendor-id').value;
+  const newSite = document.querySelector('input[name="change-site"]:checked')?.value;
+  if (!newSite) { showToast('Choisissez un site','err'); return; }
+  const vendor = authData.vendors.find(v => v.id === vendorId);
+  if (!vendor) return;
+  const oldSite = vendor.site;
+  if (oldSite === newSite) { showToast('Le vendeur est déjà sur ce site','err'); return; }
+  vendor.site = newSite;
+  vendor.role = newSite;
+  saveAuth(); renderUsers();
+  document.getElementById('modal-change-site').classList.remove('open');
+  const newConf = SITES[newSite] || {};
+  showToast(`${vendor.nom} déplacé vers ${newConf.icon} ${newConf.label} ✓`,'ok');
+}
+
+function approveUser(id) {
+  const idx = authData.pending.findIndex(p=>p.id===id);
+  if (idx===-1) return;
+  const user = authData.pending[idx];
+  authData.vendors.push({...user});
+  authData.pending.splice(idx,1);
+  saveAuth(); renderUsers();
+  showToast(`${user.nom} approuvé ✓`,'ok');
+}
+
+function rejectUser(id) {
+  if (!confirm('Refuser et supprimer cette demande ?')) return;
+  authData.pending = authData.pending.filter(p=>p.id!==id);
+  saveAuth(); renderUsers();
+  showToast('Demande refusée','err');
+}
+
+function deleteUser(id, type) {
+  if (!confirm('Supprimer cet utilisateur ?')) return;
+  if (type==='admin') {
+    if (authData.admins.length<=1) { showToast('Impossible — dernier admin !','err'); return; }
+    authData.admins = authData.admins.filter(a=>a.id!==id);
+  } else {
+    authData.vendors = authData.vendors.filter(v=>v.id!==id);
+  }
+  saveAuth(); renderUsers();
+  showToast('Supprimé','err');
+}
+
+function renderUsers() {
+  // Update nav pending badge
+  const badgeEl = document.getElementById('nav-pending-badge');
+  if (badgeEl) {
+    if (authData.pending.length > 0) {
+      badgeEl.textContent = authData.pending.length;
+      badgeEl.style.display = 'block';
+    } else {
+      badgeEl.style.display = 'none';
+    }
+  }
+  // Pending
+  const pendEl = document.getElementById('pending-users-list');
+  if (!pendEl) return; // page pas visible, badge déjà mis à jour
+  if (!authData.pending.length) {
+    pendEl.innerHTML = '<div class="empty" style="padding:20px">Aucune demande en attente</div>';
+  } else {
+    pendEl.innerHTML = authData.pending.map(u => {
+      const siteConf = SITES[u.site]||{};
+      return `<div class="user-row">
+        <div class="user-avatar" style="background:rgba(245,158,11,.15);color:var(--warn)">⏳</div>
+        <div style="flex:1">
+          <strong>${u.nom}</strong>
+          <div style="font-size:12px;color:var(--muted)">${u.email} · ${siteConf.icon||''} ${siteConf.label||u.site}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${fmtDate(u.createdAt)}</div>
+        </div>
+        <span class="pending-badge">En attente</span>
+        <button class="btn btn-success btn-sm" style="margin-left:10px" onclick="approveUser('${u.id}')">✅ Approuver</button>
+        <button class="btn btn-danger btn-sm" onclick="rejectUser('${u.id}')">✕ Refuser</button>
+      </div>`;
+    }).join('');
+  }
+
+  // Admins
+  const admEl = document.getElementById('admin-users-list');
+  admEl.innerHTML = authData.admins.map(u => `
+    <div class="user-row">
+      <div class="user-avatar" style="background:rgba(255,107,0,.15);color:var(--admin-c)">${u.nom[0].toUpperCase()}</div>
+      <div style="flex:1">
+        <strong>${u.nom}</strong>
+        <div style="font-size:12px;color:var(--muted)">${u.email}</div>
+      </div>
+      <span class="approved-badge">Admin</span>
+      ${u.id!=='admin-default' && u.id!==currentUser?.id ? `<button class="btn btn-danger btn-sm" style="margin-left:10px" onclick="deleteUser('${u.id}','admin')">🗑️</button>` : ''}
+    </div>`).join('');
+
+  // Vendors
+  const venEl = document.getElementById('active-users-list');
+  if (!authData.vendors.length) {
+    venEl.innerHTML = '<div class="empty" style="padding:20px">Aucun vendeur actif</div>';
+  } else {
+    venEl.innerHTML = authData.vendors.map(u => {
+      const siteConf = SITES[u.site]||{};
+      const siteColor = {boutique1:'var(--b1-c)',boutique2:'var(--b2-c)'}[u.site]||'var(--muted)';
+      return `<div class="user-row">
+        <div class="user-avatar" style="background:rgba(0,201,167,.12);color:var(--b1-c)">${u.nom[0].toUpperCase()}</div>
+        <div style="flex:1">
+          <strong>${u.nom}</strong>
+          <div style="font-size:12px;color:var(--muted)">${u.email}</div>
+        </div>
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:${siteColor}">${siteConf.icon||''} ${siteConf.label||u.site}</span>
+        <button class="btn btn-ghost btn-sm" style="margin-left:6px" onclick="openChangeSiteModal('${u.id}')">✏️ Site</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:4px" onclick="deleteUser('${u.id}','vendor')">🗑️</button>
+      </div>`;
+    }).join('');
+  }
+}
+
+// Topbar user info
+function getTopbarUserInfo() {
+  if (!currentUser) return '';
+  return `<span style="font-size:12px;color:var(--muted);margin-right:4px">${currentUser.nom}</span>`;
+}
+
+function login(role) {
+  // legacy shim — not used but kept for safety
+  loginSuccess({ id:'legacy', nom:'Utilisateur', email:'', role, site:role });
+}
+
+
+function setupTopbar() {
+  const pillWrap = document.getElementById('site-pill-wrap');
+  const nav = document.getElementById('topbar-nav');
+
+  const pillConf = {
+    admin: { label: '👑 Administrateur', color: 'var(--admin-c)' },
+    boutique1: { label: '🏪 Gbégamey 1', color: 'var(--b1-c)' },
+    boutique2: { label: '🏬 Gbégamey 2', color: 'var(--b2-c)' }
+  };
+  const p = pillConf[currentRole];
+  const unEl = document.getElementById('topbar-username');
+  if (unEl && currentUser) unEl.textContent = currentUser.nom;
+  pillWrap.innerHTML = `<span class="site-pill" style="color:${p.color};border-color:${p.color}">${p.label}</span>`;
+
+  if (currentRole === 'admin') {
+    nav.innerHTML = `
+      <button class="nav-btn active" onclick="showPage('admin-dashboard')">Dashboard</button>
+      <button class="nav-btn" onclick="showPage('admin-mouvements')">Mouvements</button>
+      <button class="nav-btn" onclick="showPage('admin-articles')">Articles</button>
+      <button class="nav-btn" onclick="showPage('admin-alertes')">Alertes</button>
+      <button class="nav-btn" onclick="showPage('admin-prix')">💰 Prix</button>
+      <button class="nav-btn" onclick="showPage('admin-inventaire')">📦 Inventaire</button>
+      <button class="nav-btn" onclick="showPage('admin-catalogue')">📋 Catalogue</button>
+      <button class="nav-btn" onclick="showPage('admin-config')">Config</button>
+      <button class="nav-btn" id="nav-btn-users" onclick="showPage('admin-users')" style="position:relative">
+        👥 Utilisateurs<span id="nav-pending-badge" style="display:none;position:absolute;top:4px;right:4px;background:var(--warn);color:#000;font-size:10px;font-weight:800;border-radius:50%;width:16px;height:16px;line-height:16px;text-align:center"></span>
+      </button>`;
+  } else {
+    nav.innerHTML = `
+      <button class="nav-btn active" onclick="showPage('boutique-dashboard')">Mon Stock</button>
+      <button class="nav-btn" onclick="showPage('boutique-mouvements')">Mouvements</button>`;
+  }
+}
+
+// =========================================================
+//  NAVIGATION
+// =========================================================
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const pg = document.getElementById('page-'+id);
+  if (pg) pg.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(id)) b.classList.add('active');
+  });
+  // re-render on switch
+  if (id==='admin-dashboard') renderAdminDash();
+  if (id==='admin-mouvements') renderAdminMvt();
+  if (id==='admin-articles') renderAdminArticles();
+  if (id==='admin-alertes') renderAdminAlertes();
+  if (id==='admin-config') renderConfig();
+  if (id==='admin-catalogue') renderCatalogue();
+  if (id==='admin-users') renderUsers();
+  if (id==='admin-prix') renderPrix();
+  if (id==='admin-inventaire') renderInventaire();
+  if (id==='boutique-dashboard') renderBoutiqueStock();
+  if (id==='boutique-mouvements') renderBoutiqueMvt();
+}
+
+// =========================================================
+//  HELPERS: stock
+// =========================================================
+function getStock(artId, site) {
+  const art = db.articles.find(a => a.id === artId);
+  if (!art) return 0;
+  return (art.stocks || {})[site] || 0;
+}
+function getTotalStock(artId) {
+  return Object.keys(SITES).reduce((s, site) => s + getStock(artId, site), 0);
+}
+function getStatus(artId, site) {
+  const art = db.articles.find(a => a.id === artId);
+  if (!art) return 'out';
+  const s = getStock(artId, site);
+  if (s <= 0) return 'out';
+  if (s <= (art.seuil || 5)) return 'low';
+  return 'ok';
+}
+function statusBadge(artId, site) {
+  const s = getStatus(artId, site);
+  const labels = { ok: 'En stock', low: 'Stock bas', out: 'Rupture' };
+  const cls = { ok: 'badge-ok', low: 'badge-warn', out: 'badge-danger' };
+  return `<span class="badge ${cls[s]}">${labels[s]}</span>`;
+}
+function globalStatus(artId) {
+  const total = getTotalStock(artId);
+  const art = db.articles.find(a => a.id === artId);
+  if (!art) return 'out';
+  if (total <= 0) return 'out';
+  if (total <= (art.seuil || 5) * 3) return 'low';
+  return 'ok';
+}
+function siteColor(site) {
+  const m = { magasin:'#4f8ef7', boutique1:'var(--b1-c)', boutique2:'var(--b2-c)' };
+  return m[site] || '#fff';
+}
+function siteLabel(site) { return SITES[site]?.icon + ' ' + SITES[site]?.label || site; }
+
+// =========================================================
+//  MODAL
+// =========================================================
+function openModal(id) {
+  if (id==='modal-article') fillArtSelects();
+  if (id==='modal-mvt') { fillMvtSelect(); setMvtType(document.getElementById('mvt-type').value || 'entree'); }
+  if (id==='modal-transfer') { fillTransferSelect(); }
+  if (id==='modal-catalogue-edit') { fillCrefSelects(); resetCrefForm(); }
+  if (id==='modal-from-catalogue') { setTimeout(renderFromCatalogue, 50); }
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  if (id==='modal-article') resetArtForm();
+  if (id==='modal-categorie') resetCatForm();
+  if (id==='modal-fournisseur') resetFourForm();
+  if (id==='modal-catalogue-edit') resetCrefForm();
+}
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+
+// =========================================================
+//  ARTICLES
+// =========================================================
+function fillArtSelects() {
+  const cat = document.getElementById('art-cat');
+  cat.innerHTML = '<option value="">-- Aucune --</option>' + db.categories.map(c => `<option value="${c.id}">${c.nom}</option>`).join('');
+  const four = document.getElementById('art-four');
+  four.innerHTML = '<option value="">-- Aucun --</option>' + db.fournisseurs.map(f => `<option value="${f.id}">${f.nom}</option>`).join('');
+}
+
+function saveArticle() {
+  const nom = document.getElementById('art-nom').value.trim();
+  if (!nom) { showToast('Le nom est obligatoire','err'); return; }
+  const id = document.getElementById('art-id').value;
+  const stocks = {
+    magasin: parseInt(document.getElementById('art-stock-mag').value)||0,
+    boutique1: parseInt(document.getElementById('art-stock-b1').value)||0,
+    boutique2: parseInt(document.getElementById('art-stock-b2').value)||0
+  };
+  const art = {
+    id: id||uid(),
+    ref: document.getElementById('art-ref').value.trim(),
+    nom,
+    cat: document.getElementById('art-cat').value,
+    fournisseur: document.getElementById('art-four').value,
+    unite: document.getElementById('art-unite').value.trim()||'pièce',
+    prixAchat: parseFloat(document.getElementById('art-prix').value)||0,
+    prixVente: parseFloat(document.getElementById('art-prix').value)||0,
+    prix: parseFloat(document.getElementById('art-prix').value)||0,
+    seuil: parseInt(document.getElementById('art-seuil').value)||5,
+    stocks,
+    photos: [...artPhotos],
+    photo: artPhotos[0] || null,
+    createdAt: id ? undefined : Date.now()
+  };
+  if (id) {
+    const idx = db.articles.findIndex(a => a.id===id);
+    art.createdAt = db.articles[idx].createdAt;
+    db.articles[idx] = art;
+    showToast('Article mis à jour ✓','ok');
+  } else {
+    db.articles.unshift(art);
+    showToast('Article ajouté ✓','ok');
+  }
+  saveDB(); renderAll(); closeModal('modal-article');
+}
+
+function editArticle(id) {
+  const a = db.articles.find(x => x.id===id); if(!a) return;
+  fillArtSelects();
+  document.getElementById('modal-art-title').textContent = 'Modifier l\'Article';
+  document.getElementById('art-id').value = a.id;
+  document.getElementById('art-ref').value = a.ref||'';
+  document.getElementById('art-nom').value = a.nom;
+  document.getElementById('art-cat').value = a.cat||'';
+  document.getElementById('art-four').value = a.fournisseur||'';
+  document.getElementById('art-unite').value = a.unite||'';
+  document.getElementById('art-prix').value = a.prix||0;
+  document.getElementById('art-seuil').value = a.seuil||5;
+  document.getElementById('art-stock-mag').value = (a.stocks||{}).magasin||0;
+  document.getElementById('art-stock-b1').value = (a.stocks||{}).boutique1||0;
+  document.getElementById('art-stock-b2').value = (a.stocks||{}).boutique2||0;
+  // Load photos
+  artPhotos = a.photos ? [...a.photos] : (a.photo ? [a.photo] : []);
+  renderPhotosGrid();
+  openModal('modal-article');
+}
+
+function deleteArticle(id) {
+  if(!confirm('Supprimer cet article ?')) return;
+  db.articles = db.articles.filter(a => a.id!==id);
+  saveDB(); renderAll(); showToast('Supprimé','err');
+}
+
+function resetArtForm() {
+  document.getElementById('modal-art-title').textContent = 'Nouvel Article';
+  ['art-id','art-ref','art-nom','art-unite'].forEach(f => document.getElementById(f).value='');
+  ['art-prix','art-stock-mag','art-stock-b1','art-stock-b2'].forEach(f => document.getElementById(f).value='0');
+  document.getElementById('art-seuil').value='5';
+  artPhotos = [];
+  renderPhotosGrid();
+}
+
+// =========================================================
+//  PHOTO (multi-photos)
+// =========================================================
+let artPhotos = []; // tableau de base64, max 5
+const MAX_PHOTOS = 3;
+
+function handlePhotoUpload(event) {
+  const files = Array.from(event.target.files);
+  if (!files.length) return;
+  const remaining = MAX_PHOTOS - artPhotos.length;
+  if (remaining <= 0) { showToast(`Maximum ${MAX_PHOTOS} photos atteint`,'err'); return; }
+  const toProcess = files.slice(0, remaining);
+  if (files.length > remaining) showToast(`Seulement ${remaining} photo(s) ajoutée(s) (max ${MAX_PHOTOS})`,'warn');
+  let loaded = 0;
+  toProcess.forEach(file => {
+    if (file.size > 3 * 1024 * 1024) { showToast(`${file.name} trop lourd (max 3 Mo)`,'err'); loaded++; if(loaded===toProcess.length) renderPhotosGrid(); return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+      artPhotos.push(e.target.result);
+      loaded++;
+      if (loaded === toProcess.length) renderPhotosGrid();
+    };
+    reader.readAsDataURL(file);
+  });
+  event.target.value = '';
+}
+
+function renderPhotosGrid() {
+  const grid = document.getElementById('photos-grid');
+  const addBtn = document.getElementById('photos-add-btn');
+  if (!grid) return;
+  grid.innerHTML = artPhotos.map((src, i) => `
+    <div style="position:relative;border-radius:8px;overflow:hidden;border:${i===0?'2px solid var(--admin-c)':'1px solid var(--border)'}">
+      <img src="${src}" style="width:100%;height:80px;object-fit:cover;display:block;cursor:pointer" onclick="openPhotoViewer(${i})" title="${i===0?'Photo principale':'Photo '+(i+1)}">
+      ${i===0?'<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(255,107,0,.8);color:#000;font-size:9px;font-weight:800;text-align:center;padding:2px">PRINCIPALE</div>':''}
+      <button type="button" onclick="removePhotoAt(${i})" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,.7);color:#fff;border:none;width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;line-height:1">✕</button>
+      ${i>0?`<button type="button" onclick="setMainPhoto(${i})" style="position:absolute;top:3px;left:3px;background:rgba(255,107,0,.85);color:#000;border:none;border-radius:4px;cursor:pointer;font-size:9px;font-weight:800;padding:2px 4px" title="Définir comme principale">★</button>`:''}
+    </div>`).join('');
+  if (addBtn) addBtn.style.display = artPhotos.length >= MAX_PHOTOS ? 'none' : 'flex';
+}
+
+function removePhotoAt(i) {
+  artPhotos.splice(i, 1);
+  renderPhotosGrid();
+}
+
+function setMainPhoto(i) {
+  const main = artPhotos.splice(i, 1)[0];
+  artPhotos.unshift(main);
+  renderPhotosGrid();
+  showToast('Photo principale mise à jour ✓','ok');
+}
+
+function removePhoto(e) {
+  // legacy compat
+  artPhotos = [];
+  renderPhotosGrid();
+}
+
+function artThumb(art) {
+  const photos = art.photos || (art.photo ? [art.photo] : []);
+  if (photos.length) return `<img class="art-thumb" src="${photos[0]}" alt="${art.nom}" style="cursor:pointer" onclick="openArticleGallery('${art.id}',event)">`;
+  return `<div class="art-thumb-placeholder">📦</div>`;
+}
+
+// ── Visionneuse photos ──
+let galleryPhotos = [];
+let galleryIndex = 0;
+
+function openPhotoViewer(idx) {
+  galleryPhotos = [...artPhotos];
+  galleryIndex = idx;
+  showGallery();
+}
+
+function openArticleGallery(artId, e) {
+  if (e) e.stopPropagation();
+  const art = db.articles.find(a => a.id === artId);
+  if (!art) return;
+  galleryPhotos = art.photos || (art.photo ? [art.photo] : []);
+  if (!galleryPhotos.length) return;
+  galleryIndex = 0;
+  showGallery();
+}
+
+function showGallery() {
+  let overlay = document.getElementById('photo-gallery-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'photo-gallery-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:10000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px';
+    overlay.onclick = e => { if(e.target===overlay) closeGallery(); };
+    document.body.appendChild(overlay);
+  }
+  const total = galleryPhotos.length;
+  overlay.innerHTML = `
+    <button onclick="closeGallery()" style="position:absolute;top:18px;right:18px;background:rgba(255,255,255,.1);border:none;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px">✕</button>
+    <div style="display:flex;align-items:center;gap:16px">
+      <button onclick="galleryNav(-1)" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:42px;height:42px;border-radius:50%;cursor:pointer;font-size:20px;${total<=1?'opacity:.3;pointer-events:none':''}">‹</button>
+      <img id="gallery-main-img" src="${galleryPhotos[galleryIndex]}" style="max-height:70vh;max-width:80vw;border-radius:12px;object-fit:contain;box-shadow:0 20px 60px rgba(0,0,0,.6)">
+      <button onclick="galleryNav(1)" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:42px;height:42px;border-radius:50%;cursor:pointer;font-size:20px;${total<=1?'opacity:.3;pointer-events:none':''}">›</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+      ${galleryPhotos.map((src,i) => `<img src="${src}" onclick="galleryGoTo(${i})" style="width:54px;height:54px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid ${i===galleryIndex?'var(--admin-c)':'transparent'};opacity:${i===galleryIndex?'1':'0.55'};transition:.2s">`).join('')}
+    </div>
+    <div style="color:rgba(255,255,255,.5);font-size:12px">${galleryIndex+1} / ${total}</div>`;
+  overlay.style.display = 'flex';
+}
+
+function galleryNav(dir) {
+  galleryIndex = (galleryIndex + dir + galleryPhotos.length) % galleryPhotos.length;
+  showGallery();
+}
+function galleryGoTo(i) { galleryIndex = i; showGallery(); }
+function closeGallery() {
+  const o = document.getElementById('photo-gallery-overlay');
+  if (o) o.style.display = 'none';
+}
+
+// =========================================================
+//  MOUVEMENTS
+// =========================================================
+function fillMvtSelect() {
+  const site = currentRole === 'boutique1' ? 'boutique1' : 'boutique2';
+  const sel = document.getElementById('mvt-art');
+  sel.innerHTML = '<option value="">-- Choisir un article --</option>' +
+    db.articles.map(a => `<option value="${a.id}">${a.ref?a.ref+' - ':''}${a.nom}</option>`).join('');
+  document.getElementById('mvt-stock-info').textContent = 'Sélectionnez un article';
+}
+
+function updateMvtInfo() {
+  const id = document.getElementById('mvt-art').value;
+  const site = currentRole === 'boutique1' ? 'boutique1' : 'boutique2';
+  if (!id) { document.getElementById('mvt-stock-info').textContent = 'Sélectionnez un article'; return; }
+  const art = db.articles.find(a => a.id===id);
+  if (!art) return;
+  const s = getStock(id, site);
+  document.getElementById('mvt-stock-info').innerHTML = `Stock actuel : <strong style="color:var(--text);font-family:var(--fm)">${fmt(s)} ${art.unite}</strong> — Seuil alerte : ${art.seuil}`;
+}
+
+function openMvtVendeur(type) {
+  fillMvtSelect();
+  setMvtType(type);
+  document.getElementById('modal-mvt').classList.add('open');
+}
+
+function setMvtType(type) {
+  document.getElementById('mvt-type').value = type;
+  const badge = document.getElementById('mvt-type-badge');
+  const confirmBtn = document.getElementById('mvt-confirm-btn');
+  if (type === 'entree') {
+    document.getElementById('mvt-modal-title').textContent = '📥 Réception de stock';
+    if (badge) { badge.textContent = '📥 Entrée — augmente le stock'; badge.style.cssText = 'display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;margin-bottom:16px;background:rgba(34,197,94,.12);color:var(--ok);border:1px solid rgba(34,197,94,.3)'; }
+    if (confirmBtn) { confirmBtn.style.background='#22c55e'; confirmBtn.textContent='✅ Confirmer la réception'; }
+  } else {
+    document.getElementById('mvt-modal-title').textContent = '📤 Vente / Sortie de stock';
+    if (badge) { badge.textContent = '📤 Sortie — déduit du stock'; badge.style.cssText = 'display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;font-weight:700;font-size:13px;margin-bottom:16px;background:rgba(239,68,68,.12);color:var(--danger);border:1px solid rgba(239,68,68,.3)'; }
+    if (confirmBtn) { confirmBtn.style.background='#ef4444'; confirmBtn.textContent='📤 Confirmer la vente'; }
+  }
+}
+
+function saveMvt() {
+  const artId = document.getElementById('mvt-art').value;
+  const type = document.getElementById('mvt-type').value;
+  const qte = parseInt(document.getElementById('mvt-qte').value)||0;
+  const motif = document.getElementById('mvt-motif').value.trim();
+  const site = currentRole === 'boutique1' ? 'boutique1' : 'boutique2';
+  if (!artId) { showToast('Choisissez un article','err'); return; }
+  if (qte <= 0) { showToast('Quantité invalide','err'); return; }
+  const art = db.articles.find(a => a.id===artId);
+  if (!art) return;
+  if (!art.stocks) art.stocks = {};
+  const before = art.stocks[site]||0;
+  if (type==='sortie' && before < qte) { showToast('Stock insuffisant !','err'); return; }
+  art.stocks[site] = type==='entree' ? before+qte : before-qte;
+  const mvt = { id:uid(), artId, artNom:art.nom, site, type, qte, before, after:art.stocks[site], motif, date:Date.now() };
+  db.mouvements.unshift(mvt);
+  saveDB(); renderAll();
+  showToast(`${type==='entree'?'Entrée':'Sortie'} enregistrée — Stock : ${fmt(art.stocks[site])} ${art.unite}`,'ok');
+  closeModal('modal-mvt');
+  document.getElementById('mvt-qte').value='1';
+  document.getElementById('mvt-motif').value='';
+}
+
+// =========================================================
+//  TRANSFERTS
+// =========================================================
+function fillTransferSelect() {
+  const sel = document.getElementById('tr-art');
+  sel.innerHTML = '<option value="">-- Choisir un article --</option>' +
+    db.articles.map(a => `<option value="${a.id}">${a.ref?a.ref+' - ':''}${a.nom}</option>`).join('');
+}
+
+function updateTransferInfo() {
+  const artId = document.getElementById('tr-art').value;
+  const from = document.getElementById('tr-from').value;
+  if (!artId || !from) { document.getElementById('tr-info').textContent = 'Sélectionnez un article et un site source'; return; }
+  const art = db.articles.find(a => a.id===artId);
+  if (!art) return;
+  const s = getStock(artId, from);
+  document.getElementById('tr-info').innerHTML = `Stock disponible à <strong>${siteLabel(from)}</strong> : <strong style="color:var(--text);font-family:var(--fm)">${fmt(s)} ${art.unite}</strong>`;
+}
+
+function saveTransfer() {
+  const artId = document.getElementById('tr-art').value;
+  const from = document.getElementById('tr-from').value;
+  const to = document.getElementById('tr-to').value;
+  const qte = parseInt(document.getElementById('tr-qte').value)||0;
+  const motif = document.getElementById('tr-motif').value.trim();
+  if (!artId) { showToast('Choisissez un article','err'); return; }
+  if (!from || !to) { showToast('Choisissez source et destination','err'); return; }
+  if (from===to) { showToast('Source = destination !','err'); return; }
+  if (qte<=0) { showToast('Quantité invalide','err'); return; }
+  const art = db.articles.find(a => a.id===artId);
+  if (!art) return;
+  if (!art.stocks) art.stocks = {};
+  const beforeFrom = art.stocks[from]||0;
+  if (beforeFrom < qte) { showToast('Stock insuffisant à la source !','err'); return; }
+  const beforeTo = art.stocks[to]||0;
+  art.stocks[from] = beforeFrom - qte;
+  art.stocks[to] = beforeTo + qte;
+  // log two mvts
+  db.mouvements.unshift({ id:uid(), artId, artNom:art.nom, site:from, type:'transfert', direction:'sortie', to, qte, before:beforeFrom, after:art.stocks[from], motif:`→ ${siteLabel(to)} ${motif?'| '+motif:''}`, date:Date.now() });
+  db.mouvements.unshift({ id:uid(), artId, artNom:art.nom, site:to, type:'transfert', direction:'entree', from, qte, before:beforeTo, after:art.stocks[to], motif:`← ${siteLabel(from)} ${motif?'| '+motif:''}`, date:Date.now() });
+  saveDB(); renderAll();
+  showToast(`Transfert effectué : ${fmt(qte)} ${art.unite} → ${siteLabel(to)}`,'ok');
+  closeModal('modal-transfer');
+}
+
+// =========================================================
+//  CATEGORIES
+// =========================================================
+function saveCategorie() {
+  const nom = document.getElementById('cat-nom').value.trim();
+  if (!nom) { showToast('Nom requis','err'); return; }
+  const id = document.getElementById('cat-id').value;
+  const cat = { id:id||uid(), nom, couleur:document.getElementById('cat-couleur').value };
+  if (id) { db.categories[db.categories.findIndex(c=>c.id===id)] = cat; }
+  else { db.categories.push(cat); }
+  saveDB(); renderAll(); closeModal('modal-categorie');
+  showToast('Catégorie sauvegardée ✓','ok');
+}
+function editCategorie(id) {
+  const c = db.categories.find(x=>x.id===id); if(!c) return;
+  document.getElementById('modal-cat-title').textContent='Modifier';
+  document.getElementById('cat-id').value=c.id;
+  document.getElementById('cat-nom').value=c.nom;
+  document.getElementById('cat-couleur').value=c.couleur||'#4f8ef7';
+  openModal('modal-categorie');
+}
+function deleteCategorie(id) {
+  if(!confirm('Supprimer ?')) return;
+  db.categories=db.categories.filter(c=>c.id!==id);
+  saveDB(); renderAll(); showToast('Supprimé','err');
+}
+function resetCatForm() {
+  document.getElementById('modal-cat-title').textContent='Nouvelle Catégorie';
+  document.getElementById('cat-id').value='';
+  document.getElementById('cat-nom').value='';
+  document.getElementById('cat-couleur').value='#4f8ef7';
+}
+
+// =========================================================
+//  FOURNISSEURS
+// =========================================================
+function saveFournisseur() {
+  const nom = document.getElementById('four-nom').value.trim();
+  if (!nom) { showToast('Nom requis','err'); return; }
+  const id = document.getElementById('four-id').value;
+  const f = { id:id||uid(), nom, contact:document.getElementById('four-contact').value.trim(), tel:document.getElementById('four-tel').value.trim(), email:document.getElementById('four-email').value.trim() };
+  if (id) { db.fournisseurs[db.fournisseurs.findIndex(x=>x.id===id)] = f; }
+  else { db.fournisseurs.push(f); }
+  saveDB(); renderAll(); closeModal('modal-fournisseur');
+  showToast('Fournisseur sauvegardé ✓','ok');
+}
+function editFournisseur(id) {
+  const f = db.fournisseurs.find(x=>x.id===id); if(!f) return;
+  document.getElementById('modal-four-title').textContent='Modifier';
+  document.getElementById('four-id').value=f.id;
+  document.getElementById('four-nom').value=f.nom;
+  document.getElementById('four-contact').value=f.contact||'';
+  document.getElementById('four-tel').value=f.tel||'';
+  document.getElementById('four-email').value=f.email||'';
+  openModal('modal-fournisseur');
+}
+function deleteFournisseur(id) {
+  if(!confirm('Supprimer ?')) return;
+  db.fournisseurs=db.fournisseurs.filter(f=>f.id!==id);
+  saveDB(); renderAll(); showToast('Supprimé','err');
+}
+function resetFourForm() {
+  document.getElementById('modal-four-title').textContent='Nouveau Fournisseur';
+  ['four-id','four-nom','four-contact','four-tel','four-email'].forEach(f=>document.getElementById(f).value='');
+}
+
+// =========================================================
+//  RENDER: ADMIN
+// =========================================================
+function renderAdminDash() {
+  const search = (document.getElementById('adm-search')||{value:''}).value.toLowerCase();
+  // Global stats
+  document.getElementById('adm-total-arts').textContent = fmt(db.articles.length);
+  const totalStock = db.articles.reduce((s,a) => s+getTotalStock(a.id), 0);
+  document.getElementById('adm-total-stock').textContent = fmt(totalStock);
+  const alertCount = db.articles.filter(a => Object.keys(SITES).some(site => getStatus(a.id,site) !== 'ok')).length;
+  document.getElementById('adm-alertes').textContent = fmt(alertCount);
+  const todayMvt = db.mouvements.filter(m => new Date(m.date).toDateString()===today()).length;
+  document.getElementById('adm-mvt-today').textContent = fmt(todayMvt);
+
+  // Site cards
+  Object.keys(SITES).forEach(site => {
+    const bodyEl = document.getElementById('sc-'+site+'-body');
+    if (!bodyEl) return;
+    const siteArts = db.articles.filter(a => getStock(a.id,site)>0 || true);
+    const totalS = db.articles.reduce((s,a)=>s+getStock(a.id,site),0);
+    const okCount = db.articles.filter(a=>getStatus(a.id,site)==='ok').length;
+    const lowCount = db.articles.filter(a=>getStatus(a.id,site)==='low').length;
+    const outCount = db.articles.filter(a=>getStatus(a.id,site)==='out').length;
+    bodyEl.innerHTML = `
+      <div class="site-stat"><span class="site-stat-label">Stock total</span><span class="site-stat-val">${fmt(totalS)}</span></div>
+      <div class="site-stat"><span class="site-stat-label">✅ En stock</span><span class="site-stat-val" style="color:var(--ok)">${okCount}</span></div>
+      <div class="site-stat"><span class="site-stat-label">⚠️ Stock bas</span><span class="site-stat-val" style="color:var(--warn)">${lowCount}</span></div>
+      <div class="site-stat"><span class="site-stat-label">🚨 Rupture</span><span class="site-stat-val" style="color:var(--danger)">${outCount}</span></div>`;
+  });
+
+  // Consolidated table
+  let arts = db.articles.filter(a => !search || a.nom.toLowerCase().includes(search) || (a.ref||'').toLowerCase().includes(search));
+  const tbody = document.getElementById('adm-stock-table');
+  if (!arts.length) { tbody.innerHTML = `<tr><td colspan="7"><div class="empty">Aucun article</div></td></tr>`; return; }
+  const statusOrder = { out:0, low:1, ok:2 };
+  arts = arts.sort((a,b) => statusOrder[globalStatus(a.id)] - statusOrder[globalStatus(b.id)]);
+  tbody.innerHTML = arts.map(a => {
+    const cat = db.categories.find(c=>c.id===a.cat);
+    const sm = getStock(a.id,'magasin');
+    const sb1 = getStock(a.id,'boutique1');
+    const sb2 = getStock(a.id,'boutique2');
+    const total = sm+sb1+sb2;
+    const gs = globalStatus(a.id);
+    const gsCls = {ok:'badge-ok',low:'badge-warn',out:'badge-danger'}[gs];
+    const gsLabel = {ok:'OK',low:'Bas',out:'Rupture'}[gs];
+    return `<tr>
+      <td>${artThumb(a)}</td>
+      <td><strong>${a.nom}</strong>${a.ref?`<br><span style="font-size:11px;color:var(--muted);font-family:var(--fm)">${a.ref}</span>`:''}</td>
+      <td>${cat?`<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:${cat.couleur}"></span>${cat.nom}</span>`:'—'}</td>
+      <td><span style="font-family:var(--fm);color:#4f8ef7">${fmt(sm)}</span> <span style="color:var(--muted);font-size:11px">${a.unite}</span></td>
+      <td><span style="font-family:var(--fm);color:var(--b1-c)">${fmt(sb1)}</span> <span style="color:var(--muted);font-size:11px">${a.unite}</span></td>
+      <td><span style="font-family:var(--fm);color:var(--b2-c)">${fmt(sb2)}</span> <span style="color:var(--muted);font-size:11px">${a.unite}</span></td>
+      <td><strong style="font-family:var(--fm);font-size:15px">${fmt(total)}</strong> <span style="color:var(--muted);font-size:11px">${a.unite}</span></td>
+      <td><span class="badge ${gsCls}">${gsLabel}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAdminMvt() {
+  const search = (document.getElementById('adm-mvt-search')||{value:''}).value.toLowerCase();
+  const siteF = (document.getElementById('adm-mvt-site')||{value:''}).value;
+  const typeF = (document.getElementById('adm-mvt-type')||{value:''}).value;
+  let mvts = db.mouvements.filter(m => {
+    const matchS = !search || m.artNom.toLowerCase().includes(search) || (m.motif||'').toLowerCase().includes(search);
+    const matchSite = !siteF || m.site===siteF;
+    const matchType = !typeF || m.type===typeF;
+    return matchS && matchSite && matchType;
+  });
+  const tbody = document.getElementById('adm-mvt-table');
+  if (!mvts.length) { tbody.innerHTML = `<tr><td colspan="8"><div class="empty">Aucun mouvement</div></td></tr>`; return; }
+  tbody.innerHTML = mvts.map(m => {
+    const site = SITES[m.site] || {};
+    const isIn = m.type==='entree' || (m.type==='transfert' && m.direction==='entree');
+    const isOut = m.type==='sortie' || (m.type==='transfert' && m.direction==='sortie');
+    const typeLabel = m.type==='transfert' ? (m.direction==='entree'?'⇄ Transfert ↓':'⇄ Transfert ↑') : (m.type==='entree'?'📥 Entrée':'📤 Sortie');
+    const typeCls = isIn ? 'badge-ok' : 'badge-danger';
+    return `<tr>
+      <td style="color:var(--muted);font-size:11px">${fmtDate(m.date)}</td>
+      <td><span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:${site.color}">${site.icon||''} ${site.label||m.site}</span></td>
+      <td><strong>${m.artNom}</strong></td>
+      <td><span class="badge ${typeCls}">${typeLabel}</span></td>
+      <td style="font-family:var(--fm);color:${isIn?'var(--ok)':'var(--danger)'}">
+        ${isIn?'+':'-'}${fmt(m.qte)}
+      </td>
+      <td style="color:var(--muted);font-family:var(--fm)">${fmt(m.before)}</td>
+      <td style="font-family:var(--fm)">${fmt(m.after)}</td>
+      <td style="color:var(--muted);font-size:12px">${m.motif||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAdminArticles() {
+  const search = (document.getElementById('adm-art-search')||{value:''}).value.toLowerCase();
+  let arts = db.articles.filter(a => !search || a.nom.toLowerCase().includes(search) || (a.ref||'').toLowerCase().includes(search));
+  const tbody = document.getElementById('adm-art-table');
+  if (!arts.length) { tbody.innerHTML = `<tr><td colspan="7"><div class="empty">Aucun article — cliquez sur "+ Nouvel article"</div></td></tr>`; return; }
+  tbody.innerHTML = arts.map(a => {
+    const cat = db.categories.find(c=>c.id===a.cat);
+    const four = db.fournisseurs.find(f=>f.id===a.fournisseur);
+    return `<tr>
+      <td>${artThumb(a)}</td>
+      <td style="font-family:var(--fm);color:var(--muted);font-size:12px">${a.ref||'—'}</td>
+      <td><strong>${a.nom}</strong></td>
+      <td>${cat?`<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:${cat.couleur}"></span>${cat.nom}</span>`:'—'}</td>
+      <td>${a.unite||'pièce'}</td>
+      <td style="font-family:var(--fm)">${fmt(a.prix)} FCFA</td>
+      <td style="font-family:var(--fm)">${fmt(a.seuil)}</td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="editArticle('${a.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteArticle('${a.id}')">🗑️</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAdminAlertes() {
+  const cont = document.getElementById('adm-alertes-list');
+  const alerts = [];
+  db.articles.forEach(a => {
+    Object.keys(SITES).forEach(site => {
+      const s = getStatus(a.id, site);
+      if (s !== 'ok') alerts.push({ art:a, site, status:s, stock:getStock(a.id,site) });
+    });
+  });
+  if (!alerts.length) {
+    cont.innerHTML = `<div class="empty" style="padding:60px"><p style="font-size:22px;margin-bottom:8px">✅</p>Tout est en ordre — aucune alerte</div>`;
+    return;
+  }
+  alerts.sort((a,b) => (a.status==='out'?0:1) - (b.status==='out'?0:1));
+  cont.innerHTML = alerts.map(({art, site, status, stock}) => {
+    const siteConf = SITES[site];
+    return `<div class="alert-strip ${status==='out'?'red':''}">
+      <div class="alert-strip-icon">${status==='out'?'🚨':'⚠️'}</div>
+      <div class="alert-strip-text">
+        <strong>${art.nom} ${art.ref?'('+art.ref+')':''}</strong>
+        <span>${siteConf.icon} ${siteConf.label} — ${status==='out'?'Rupture de stock !':'Stock bas : '+fmt(stock)+' '+art.unite+' (seuil : '+art.seuil+')'}</span>
+      </div>
+      <button class="btn btn-transfer btn-sm" style="margin-left:auto" onclick="prepTransfer('${art.id}','${site}')">⇄ Alimenter</button>
+    </div>`;
+  }).join('');
+}
+
+function prepTransfer(artId, toSite) {
+  fillTransferSelect();
+  document.getElementById('tr-art').value = artId;
+  document.getElementById('tr-to').value = toSite;
+  updateTransferInfo();
+  openModal('modal-transfer');
+}
+
+function renderConfig() {
+  // Categories
+  const catEl = document.getElementById('cat-list');
+  if (!db.categories.length) { catEl.innerHTML = `<div class="empty" style="padding:20px">Aucune catégorie</div>`; }
+  else catEl.innerHTML = db.categories.map(c => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px">
+      <span style="width:10px;height:10px;border-radius:50%;background:${c.couleur};flex-shrink:0"></span>
+      <span style="font-weight:600;flex:1">${c.nom}</span>
+      <span style="font-size:11px;color:var(--muted)">${db.articles.filter(a=>a.cat===c.id).length} art.</span>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="editCategorie('${c.id}')">✏️</button>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteCategorie('${c.id}')">🗑️</button>
+    </div>`).join('');
+
+  // Fournisseurs
+  const fourEl = document.getElementById('four-list');
+  if (!db.fournisseurs.length) { fourEl.innerHTML = `<div class="empty" style="padding:20px">Aucun fournisseur</div>`; }
+  else fourEl.innerHTML = db.fournisseurs.map(f => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px">
+      <span style="font-size:18px">🏢</span>
+      <div style="flex:1"><strong style="display:block">${f.nom}</strong><span style="font-size:11px;color:var(--muted)">${f.tel||f.email||'—'}</span></div>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="editFournisseur('${f.id}')">✏️</button>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteFournisseur('${f.id}')">🗑️</button>
+    </div>`).join('');
+}
+
+// =========================================================
+//  RENDER: BOUTIQUE
+// =========================================================
+function renderBoutiqueStock() {
+  const site = currentRole;
+  const siteConf = SITES[site];
+  document.getElementById('bout-dash-title').textContent = `${siteConf.icon} ${siteConf.label}`;
+  document.getElementById('bout-dash-sub').textContent = `Stock de votre boutique en temps réel`;
+
+  const totalS = db.articles.reduce((s,a)=>s+getStock(a.id,site),0);
+  const lowCount = db.articles.filter(a=>getStatus(a.id,site)==='low').length;
+  const outCount = db.articles.filter(a=>getStatus(a.id,site)==='out').length;
+  document.getElementById('bout-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Stock total</div><div class="stat-val">${fmt(totalS)}</div><div class="stat-sub">unités en stock</div></div>
+    <div class="stat-card"><div class="stat-label" style="color:var(--warn)">⚠️ Stock bas</div><div class="stat-val" style="color:var(--warn)">${lowCount}</div><div class="stat-sub">articles à réapprovisionner</div></div>
+    <div class="stat-card"><div class="stat-label" style="color:var(--danger)">🚨 Ruptures</div><div class="stat-val" style="color:var(--danger)">${outCount}</div><div class="stat-sub">articles épuisés</div></div>`;
+
+  // Alertes section
+  const alerts = db.articles.filter(a=>getStatus(a.id,site)!=='ok');
+  const aEl = document.getElementById('bout-alertes-section');
+  if (alerts.length) {
+    aEl.innerHTML = alerts.slice(0,3).map(a => {
+      const s = getStatus(a.id,site);
+      return `<div class="alert-strip ${s==='out'?'red':''}">
+        <div class="alert-strip-icon">${s==='out'?'🚨':'⚠️'}</div>
+        <div class="alert-strip-text">
+          <strong>${a.nom}</strong>
+          <span>${s==='out'?'Rupture de stock !':'Stock bas : '+fmt(getStock(a.id,site))+' '+a.unite}</span>
+        </div>
+        <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openMvtFor('${a.id}')">+ Entrée</button>
+      </div>`;
+    }).join('');
+  } else { aEl.innerHTML = ''; }
+
+  // Table
+  const search = (document.getElementById('bout-search')||{value:''}).value.toLowerCase();
+  const statusF = (document.getElementById('bout-filter-status')||{value:''}).value;
+  let arts = db.articles.filter(a => {
+    const matchS = !search || a.nom.toLowerCase().includes(search) || (a.ref||'').toLowerCase().includes(search);
+    const matchSt = !statusF || getStatus(a.id, site)===statusF;
+    return matchS && matchSt;
+  });
+  const statusOrder = { out:0, low:1, ok:2 };
+  arts = arts.sort((a,b) => statusOrder[getStatus(a.id,site)] - statusOrder[getStatus(b.id,site)]);
+  const tbody = document.getElementById('bout-stock-table');
+  if (!arts.length) { tbody.innerHTML = `<tr><td colspan="7"><div class="empty">Aucun article trouvé</div></td></tr>`; return; }
+  tbody.innerHTML = arts.map(a => {
+    const cat = db.categories.find(c=>c.id===a.cat);
+    const s = getStock(a.id, site);
+    return `<tr>
+      <td>${artThumb(a)}</td>
+      <td style="font-family:var(--fm);color:var(--muted);font-size:11px">${a.ref||'—'}</td>
+      <td><strong>${a.nom}</strong></td>
+      <td>${cat?`<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:${cat.couleur}"></span>${cat.nom}</span>`:'—'}</td>
+      <td><strong style="font-family:var(--fm);font-size:15px">${fmt(s)}</strong> <span style="color:var(--muted);font-size:11px">${a.unite}</span></td>
+      <td style="color:var(--muted);font-family:var(--fm)">${fmt(a.seuil)}</td>
+      <td>${statusBadge(a.id, site)}</td>
+      <td>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-ghost btn-sm" onclick="openMvtFor('${a.id}','entree')" title="Entrée">📥</button>
+          <button class="btn btn-ghost btn-sm" onclick="openMvtFor('${a.id}','sortie')" title="Sortie">📤</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openMvtFor(artId, type='entree') {
+  fillMvtSelect();
+  document.getElementById('mvt-art').value = artId;
+  updateMvtInfo();
+  setMvtType(type);
+  openModal('modal-mvt');
+}
+
+function renderBoutiqueMvt() {
+  const site = currentRole;
+  const search = (document.getElementById('bout-mvt-search')||{value:''}).value.toLowerCase();
+  const typeF = (document.getElementById('bout-mvt-type')||{value:''}).value;
+  let mvts = db.mouvements.filter(m => {
+    const matchSite = m.site===site;
+    const matchS = !search || m.artNom.toLowerCase().includes(search) || (m.motif||'').toLowerCase().includes(search);
+    const matchT = !typeF || m.type===typeF;
+    return matchSite && matchS && matchT;
+  });
+  const tbody = document.getElementById('bout-mvt-table');
+  if (!mvts.length) { tbody.innerHTML = `<tr><td colspan="7"><div class="empty">Aucun mouvement pour cette boutique</div></td></tr>`; return; }
+  tbody.innerHTML = mvts.map(m => {
+    const isIn = m.type==='entree' || (m.type==='transfert' && m.direction==='entree');
+    return `<tr>
+      <td style="color:var(--muted);font-size:11px">${fmtDate(m.date)}</td>
+      <td><strong>${m.artNom}</strong></td>
+      <td><span class="badge ${isIn?'badge-ok':'badge-danger'}">${m.type==='transfert'?'⇄ Transfert':(isIn?'📥 Entrée':'📤 Sortie')}</span></td>
+      <td style="font-family:var(--fm);font-weight:700;color:${isIn?'var(--ok)':'var(--danger)'}">${isIn?'+':'-'}${fmt(m.qte)}</td>
+      <td style="color:var(--muted);font-family:var(--fm)">${fmt(m.before)}</td>
+      <td style="font-family:var(--fm)">${fmt(m.after)}</td>
+      <td style="color:var(--muted);font-size:12px">${m.motif||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// =========================================================
+//  RENDER ALL
+// =========================================================
+function renderAll() {
+  if (currentRole === 'admin') {
+    renderAdminDash();
+    renderAdminMvt();
+    renderAdminArticles();
+    renderAdminAlertes();
+    renderConfig();
+    renderUsers();
+    renderPrix();
+    renderInventaire();
+  } else if (currentRole) {
+    renderBoutiqueStock();
+    renderBoutiqueMvt();
+  }
+}
+
+// =========================================================
+//  TOAST
+// =========================================================
+let toastTimer;
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show '+type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ t.className=''; }, 3200);
+}
+
+
+// =========================================================
+//  CATALOGUE DE RÉFÉRENCES
+// =========================================================
+function fillCrefSelects() {
+  const cat = document.getElementById('cref-cat');
+  cat.innerHTML = '<option value="">-- Aucune --</option>' + db.categories.map(c => `<option value="${c.id}">${c.nom}</option>`).join('');
+  const four = document.getElementById('cref-four');
+  four.innerHTML = '<option value="">-- Aucun --</option>' + db.fournisseurs.map(f => `<option value="${f.id}">${f.nom}</option>`).join('');
+}
+
+function handleCrefPhoto(event) {
+  const file = event.target.files[0]; if (!file) return;
+  if (file.size > 3*1024*1024) { showToast('Image trop lourde','err'); return; }
+  const r = new FileReader();
+  r.onload = e => {
+    document.getElementById('cref-photo-preview').src = e.target.result;
+    document.getElementById('cref-photo-preview').style.display = 'block';
+    document.getElementById('cref-photo-placeholder').style.display = 'none';
+    document.getElementById('cref-photo-remove').style.display = 'flex';
+    document.getElementById('cref-photo-zone').classList.add('has-photo');
+  };
+  r.readAsDataURL(file);
+}
+function removeCrefPhoto(e) {
+  if(e){e.stopPropagation();e.preventDefault();}
+  document.getElementById('cref-photo-preview').src='';
+  document.getElementById('cref-photo-preview').style.display='none';
+  document.getElementById('cref-photo-placeholder').style.display='block';
+  document.getElementById('cref-photo-remove').style.display='none';
+  document.getElementById('cref-photo-zone').classList.remove('has-photo');
+  document.getElementById('cref-photo-input').value='';
+}
+
+function saveCatalogue() {
+  const code = document.getElementById('cref-code').value.trim();
+  const nom = document.getElementById('cref-nom').value.trim();
+  if (!code) { showToast('Le code référence est obligatoire','err'); return; }
+  if (!nom) { showToast('La désignation est obligatoire','err'); return; }
+  const id = document.getElementById('cref-id').value;
+  // check unique code
+  const existing = db.catalogue.find(r => r.code===code && r.id!==id);
+  if (existing) { showToast('Ce code existe déjà dans le catalogue','err'); return; }
+  const ref = {
+    id: id||uid(), code, nom,
+    cat: document.getElementById('cref-cat').value,
+    fournisseur: document.getElementById('cref-four').value,
+    unite: document.getElementById('cref-unite').value.trim()||'pièce',
+    prix: parseFloat(document.getElementById('cref-prix').value)||0,
+    seuil: parseInt(document.getElementById('cref-seuil').value)||5,
+    desc: document.getElementById('cref-desc').value.trim(),
+    photo: document.getElementById('cref-photo-preview').style.display!=='none' ? document.getElementById('cref-photo-preview').src : null,
+    createdAt: id ? undefined : Date.now()
+  };
+  if (id) {
+    const idx = db.catalogue.findIndex(r=>r.id===id);
+    ref.createdAt = db.catalogue[idx].createdAt;
+    db.catalogue[idx] = ref;
+    showToast('Référence mise à jour ✓','ok');
+  } else {
+    db.catalogue.unshift(ref);
+    showToast('Référence ajoutée au catalogue ✓','ok');
+  }
+  saveDB(); renderCatalogue(); closeModal('modal-catalogue-edit'); resetCrefForm();
+}
+
+function editCatalogue(id) {
+  const r = db.catalogue.find(x=>x.id===id); if(!r) return;
+  fillCrefSelects();
+  document.getElementById('modal-cat-edit-title').textContent = 'Modifier la Référence';
+  document.getElementById('cref-id').value = r.id;
+  document.getElementById('cref-code').value = r.code||'';
+  document.getElementById('cref-nom').value = r.nom;
+  document.getElementById('cref-cat').value = r.cat||'';
+  document.getElementById('cref-four').value = r.fournisseur||'';
+  document.getElementById('cref-unite').value = r.unite||'';
+  document.getElementById('cref-prix').value = r.prix||0;
+  document.getElementById('cref-seuil').value = r.seuil||5;
+  document.getElementById('cref-desc').value = r.desc||'';
+  if (r.photo) {
+    document.getElementById('cref-photo-preview').src = r.photo;
+    document.getElementById('cref-photo-preview').style.display = 'block';
+    document.getElementById('cref-photo-placeholder').style.display = 'none';
+    document.getElementById('cref-photo-remove').style.display = 'flex';
+    document.getElementById('cref-photo-zone').classList.add('has-photo');
+  }
+  openModal('modal-catalogue-edit');
+}
+
+function deleteCatalogue(id) {
+  if (!confirm('Supprimer cette référence du catalogue ?')) return;
+  db.catalogue = db.catalogue.filter(r=>r.id!==id);
+  saveDB(); renderCatalogue(); showToast('Référence supprimée','err');
+}
+
+function resetCrefForm() {
+  document.getElementById('modal-cat-edit-title').textContent = 'Nouvelle Référence Produit';
+  ['cref-id','cref-code','cref-nom','cref-unite','cref-desc'].forEach(f=>document.getElementById(f).value='');
+  document.getElementById('cref-prix').value='0';
+  document.getElementById('cref-seuil').value='5';
+  removeCrefPhoto(null);
+}
+
+function renderCatalogue() {
+  const search = (document.getElementById('cat-search')||{value:''}).value.toLowerCase();
+  const catF = (document.getElementById('cat-filter-cat')||{value:''}).value;
+  // fill cat filter
+  const sel = document.getElementById('cat-filter-cat');
+  if (sel && sel.options.length <= 1) {
+    db.categories.forEach(c => { const o=document.createElement('option'); o.value=c.id; o.textContent=c.nom; sel.appendChild(o); });
+  }
+  let refs = db.catalogue.filter(r => {
+    const ms = !search || r.nom.toLowerCase().includes(search) || r.code.toLowerCase().includes(search);
+    const mc = !catF || r.cat===catF;
+    return ms && mc;
+  });
+  const grid = document.getElementById('catalogue-grid');
+  if (!refs.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)"><p style="font-size:24px;margin-bottom:10px">📋</p><p>Aucune référence — cliquez sur "+ Nouvelle référence"</p></div>`;
+    return;
+  }
+  grid.innerHTML = refs.map(r => {
+    const cat = db.categories.find(c=>c.id===r.cat);
+    const alreadyAdded = db.articles.some(a=>a.refCatalogueId===r.id);
+    const clickHandler = alreadyAdded ? '' : `openFromCatSingle('${r.id}')`;
+    const photoHtml = r.photo ? `<img class="cat-ref-img" src="${r.photo}" alt="${r.nom}">` : `<div class="cat-ref-img-placeholder">📦</div>`;
+    const statusHtml = alreadyAdded ? `<div style="font-size:11px;color:var(--ok);margin-top:4px;font-weight:600">✓ Déjà en stock</div>` : '';
+    const addBtn = !alreadyAdded ? `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openFromCatSingle('${r.id}')">+ Ajouter</button>` : '';
+    return `<div class="cat-ref-card ${alreadyAdded?'already-added':''}" onclick="${clickHandler}">
+      <div class="cat-ref-check">✓</div>
+      ${photoHtml}
+      <div class="cat-ref-body">
+        <div class="cat-ref-code">${r.code}</div>
+        <div class="cat-ref-name">${r.nom}</div>
+        <div class="cat-ref-meta">${cat?cat.nom+' · ':''}${fmt(r.prix)} FCFA / ${r.unite}</div>
+        ${statusHtml}
+      </div>
+      <div style="display:flex;gap:6px;padding:0 10px 10px;justify-content:flex-end">
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editCatalogue('${r.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteCatalogue('${r.id}')">🗑️</button>
+        ${addBtn}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openFromCatSingle(refId) {
+  const r = db.catalogue.find(x=>x.id===refId); if(!r) return;
+  document.getElementById('confirm-ref-id').value = refId;
+  document.getElementById('confirm-stock-mag').value = '0';
+  document.getElementById('confirm-stock-b1').value = '0';
+  document.getElementById('confirm-stock-b2').value = '0';
+  const cat = db.categories.find(c=>c.id===r.cat);
+  document.getElementById('confirm-ref-preview').innerHTML = `
+    ${r.photo ? `<img src="${r.photo}" style="width:56px;height:56px;object-fit:cover;border-radius:10px;flex-shrink:0">` : `<div style="width:56px;height:56px;border-radius:10px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">📦</div>`}
+    <div>
+      <div style="font-family:var(--fm);font-size:11px;color:var(--admin-c)">${r.code}</div>
+      <div style="font-weight:800;font-size:15px">${r.nom}</div>
+      <div style="font-size:12px;color:var(--muted)">${cat?cat.nom+' · ':''}${fmt(r.prix)} FCFA / ${r.unite}</div>
+    </div>`;
+  closeModal('modal-from-catalogue');
+  document.getElementById('modal-confirm-from-cat').classList.add('open');
+}
+
+function confirmAddFromCatalogue() {
+  const refId = document.getElementById('confirm-ref-id').value;
+  const r = db.catalogue.find(x=>x.id===refId); if(!r) return;
+  const stocks = {
+    magasin: parseInt(document.getElementById('confirm-stock-mag').value)||0,
+    boutique1: parseInt(document.getElementById('confirm-stock-b1').value)||0,
+    boutique2: parseInt(document.getElementById('confirm-stock-b2').value)||0
+  };
+  const art = {
+    id: uid(),
+    refCatalogueId: r.id,
+    ref: r.code,
+    nom: r.nom,
+    cat: r.cat,
+    fournisseur: r.fournisseur,
+    unite: r.unite,
+    prix: r.prix,
+    seuil: r.seuil,
+    photo: r.photo,
+    stocks,
+    createdAt: Date.now()
+  };
+  db.articles.unshift(art);
+  saveDB(); renderAll();
+  closeModal('modal-confirm-from-cat');
+  showToast(`"${r.nom}" ajouté au stock ✓`, 'ok');
+}
+
+function renderFromCatalogue() {
+  const search = (document.getElementById('fromcat-search')||{value:''}).value.toLowerCase();
+  const catF = (document.getElementById('fromcat-cat')||{value:''}).value;
+  const sel = document.getElementById('fromcat-cat');
+  if (sel && sel.options.length <= 1) {
+    db.categories.forEach(c => { const o=document.createElement('option'); o.value=c.id; o.textContent=c.nom; sel.appendChild(o); });
+  }
+  let refs = db.catalogue.filter(r => {
+    const ms = !search || r.nom.toLowerCase().includes(search) || r.code.toLowerCase().includes(search);
+    const mc = !catF || r.cat===catF;
+    return ms && mc;
+  });
+  const grid = document.getElementById('fromcat-grid');
+  if (!refs.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--muted)"><p>Aucune référence trouvée</p><p style="font-size:12px;margin-top:6px">Créez d'abord des références dans l'onglet "📋 Catalogue"</p></div>`;
+    return;
+  }
+  grid.innerHTML = refs.map(r => {
+    const cat = db.categories.find(c=>c.id===r.cat);
+    const alreadyAdded = db.articles.some(a=>a.refCatalogueId===r.id);
+    const clickHandler2 = alreadyAdded ? '' : `openFromCatSingle('${r.id}')`;
+    const photoHtml2 = r.photo ? `<img class="cat-ref-img" src="${r.photo}" alt="${r.nom}">` : `<div class="cat-ref-img-placeholder">📦</div>`;
+    const statusHtml2 = alreadyAdded
+      ? `<div style="font-size:11px;color:var(--ok);margin-top:4px;font-weight:600">✓ Déjà en stock</div>`
+      : `<div style="font-size:11px;color:var(--admin-c);margin-top:4px;font-weight:600">Cliquer pour ajouter →</div>`;
+    return `<div class="cat-ref-card ${alreadyAdded?'already-added':''}" onclick="${clickHandler2}">
+      <div class="cat-ref-check">✓</div>
+      ${photoHtml2}
+      <div class="cat-ref-body">
+        <div class="cat-ref-code">${r.code}</div>
+        <div class="cat-ref-name">${r.nom}</div>
+        <div class="cat-ref-meta">${cat?cat.nom+' · ':''}${fmt(r.prix)} FCFA / ${r.unite}</div>
+        ${statusHtml2}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+
+// =========================================================
+//  PRIX
+// =========================================================
+function prixFinal(art) {
+  const vente = art.prixVente || art.prix || 0;
+  if (!art.promo || !art.promo.active) return vente;
+  const now = Date.now();
+  const debut = art.promo.debut ? new Date(art.promo.debut).getTime() : 0;
+  const fin = art.promo.fin ? new Date(art.promo.fin).getTime() : Infinity;
+  if (now < debut || now > fin) return vente;
+  if (art.promo.type === 'pct') return vente * (1 - (art.promo.val||0)/100);
+  return Math.max(0, vente - (art.promo.val||0));
+}
+
+function isPromoActive(art) {
+  if (!art.promo || !art.promo.active) return false;
+  const now = Date.now();
+  const debut = art.promo.debut ? new Date(art.promo.debut).getTime() : 0;
+  const fin = art.promo.fin ? new Date(art.promo.fin).getTime() : Infinity;
+  return now >= debut && now <= fin;
+}
+
+function getMarge(art) {
+  const achat = art.prixAchat || 0;
+  const vente = prixFinal(art);
+  if (!achat || !vente) return null;
+  return ((vente - achat) / achat * 100).toFixed(1);
+}
+
+function calcMarge() {
+  const achat = parseFloat(document.getElementById('prix-achat').value)||0;
+  const vente = parseFloat(document.getElementById('prix-vente').value)||0;
+  const prev = document.getElementById('marge-preview');
+  const promoResult = document.getElementById('promo-result');
+  if (achat > 0 && vente > 0) {
+    const marge = ((vente - achat) / achat * 100).toFixed(1);
+    const profit = vente - achat;
+    const color = marge < 0 ? 'var(--danger)' : marge < 15 ? 'var(--warn)' : 'var(--ok)';
+    prev.style.display = 'block';
+    prev.innerHTML = `Marge : <strong style="color:${color}">${marge}%</strong> &nbsp;|&nbsp; Bénéfice unitaire : <strong style="color:${color}">${fmt(profit)} FCFA</strong>`;
+  } else { prev.style.display = 'none'; }
+  // promo calc
+  if (document.getElementById('prix-promo-active').checked && vente > 0) {
+    const type = document.getElementById('prix-promo-type').value;
+    const val = parseFloat(document.getElementById('prix-promo-val').value)||0;
+    let final = vente;
+    if (type === 'pct') final = vente * (1 - val/100);
+    else final = Math.max(0, vente - val);
+    promoResult.innerHTML = `Prix après réduction : <strong style="color:var(--b2-c)">${fmt(Math.round(final))} FCFA</strong> (économie : ${fmt(Math.round(vente-final))} FCFA)`;
+  }
+}
+
+function togglePromo() {
+  const active = document.getElementById('prix-promo-active').checked;
+  document.getElementById('promo-fields').style.display = active ? 'block' : 'none';
+  calcMarge();
+}
+
+function openPrixModal(artId) {
+  const art = db.articles.find(a=>a.id===artId); if(!art) return;
+  document.getElementById('prix-art-id').value = artId;
+  document.getElementById('prix-achat').value = art.prixAchat || art.prix || 0;
+  document.getElementById('prix-vente').value = art.prixVente || art.prix || 0;
+  const thumb = art.photo ? `<img src="${art.photo}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;flex-shrink:0">` : `<div style="width:44px;height:44px;border-radius:8px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📦</div>`;
+  document.getElementById('modal-prix-article-info').innerHTML = `${thumb}<div><strong style="font-size:15px">${art.nom}</strong><div style="font-size:12px;color:var(--muted)">${art.ref||''} · ${art.unite}</div></div>`;
+  // promo
+  if (art.promo && art.promo.active) {
+    document.getElementById('prix-promo-active').checked = true;
+    document.getElementById('promo-fields').style.display = 'block';
+    document.getElementById('prix-promo-type').value = art.promo.type || 'pct';
+    document.getElementById('prix-promo-val').value = art.promo.val || 0;
+    document.getElementById('prix-promo-debut').value = art.promo.debut || '';
+    document.getElementById('prix-promo-fin').value = art.promo.fin || '';
+  } else {
+    document.getElementById('prix-promo-active').checked = false;
+    document.getElementById('promo-fields').style.display = 'none';
+    document.getElementById('prix-promo-val').value = 0;
+    document.getElementById('prix-promo-debut').value = '';
+    document.getElementById('prix-promo-fin').value = '';
+  }
+  calcMarge();
+  document.getElementById('modal-prix').classList.add('open');
+}
+
+function savePrix() {
+  const artId = document.getElementById('prix-art-id').value;
+  const art = db.articles.find(a=>a.id===artId); if(!art) return;
+  const oldAchat = art.prixAchat || art.prix || 0;
+  const oldVente = art.prixVente || art.prix || 0;
+  const newAchat = parseFloat(document.getElementById('prix-achat').value)||0;
+  const newVente = parseFloat(document.getElementById('prix-vente').value)||0;
+  // log history
+  if (!db.prixHistory) db.prixHistory = [];
+  if (newAchat !== oldAchat) db.prixHistory.unshift({ id:uid(), artId, artNom:art.nom, type:'achat', old:oldAchat, new:newAchat, date:Date.now() });
+  if (newVente !== oldVente) db.prixHistory.unshift({ id:uid(), artId, artNom:art.nom, type:'vente', old:oldVente, new:newVente, date:Date.now() });
+  art.prixAchat = newAchat;
+  art.prixVente = newVente;
+  art.prix = newVente;
+  // promo
+  const promoActive = document.getElementById('prix-promo-active').checked;
+  if (promoActive) {
+    art.promo = {
+      active: true,
+      type: document.getElementById('prix-promo-type').value,
+      val: parseFloat(document.getElementById('prix-promo-val').value)||0,
+      debut: document.getElementById('prix-promo-debut').value,
+      fin: document.getElementById('prix-promo-fin').value
+    };
+  } else { art.promo = { active: false }; }
+  saveDB(); renderAll();
+  closeModal('modal-prix');
+  showToast('Prix mis à jour ✓','ok');
+}
+
+function renderPrix() {
+  if (!db.prixHistory) db.prixHistory = [];
+  const search = (document.getElementById('prix-search')||{value:''}).value.toLowerCase();
+  const filter = (document.getElementById('prix-filter')||{value:''}).value;
+  // Stats
+  const totalAchat = db.articles.reduce((s,a)=>{
+    return s + (a.prixAchat||0) * getTotalStock(a.id);
+  }, 0);
+  const totalVente = db.articles.reduce((s,a)=>{
+    return s + prixFinal(a) * getTotalStock(a.id);
+  }, 0);
+  const enPromo = db.articles.filter(a=>isPromoActive(a)).length;
+  const margeGlob = totalAchat > 0 ? ((totalVente-totalAchat)/totalAchat*100).toFixed(1) : '—';
+  const statsEl = document.getElementById('prix-stats-row');
+  if (statsEl) statsEl.innerHTML = `
+    <div class="stat-card"><div class="stat-label">Valeur achat totale</div><div class="stat-val" style="font-size:20px">${fmt(Math.round(totalAchat))}</div><div class="stat-sub">FCFA — coût du stock</div></div>
+    <div class="stat-card"><div class="stat-label">Valeur vente totale</div><div class="stat-val" style="font-size:20px;color:var(--ok)">${fmt(Math.round(totalVente))}</div><div class="stat-sub">FCFA — si tout vendu</div></div>
+    <div class="stat-card"><div class="stat-label">Marge globale</div><div class="stat-val" style="color:var(--admin-c)">${margeGlob}%</div><div class="stat-sub">bénéfice potentiel</div></div>`;
+
+  // Table
+  let arts = db.articles.filter(a => {
+    const ms = !search || a.nom.toLowerCase().includes(search) || (a.ref||'').toLowerCase().includes(search);
+    const mf = !filter || (filter==='promo' && isPromoActive(a)) || (filter==='nomarge' && !a.prixAchat && !a.prixVente);
+    return ms && mf;
+  });
+  const tbody = document.getElementById('prix-table');
+  if (!tbody) return;
+  if (!arts.length) { tbody.innerHTML = `<tr><td colspan="7"><div class="empty">Aucun article</div></td></tr>`; return; }
+  tbody.innerHTML = arts.map(a => {
+    const achat = a.prixAchat || 0;
+    const vente = a.prixVente || a.prix || 0;
+    const final = prixFinal(a);
+    const marge = getMarge(a);
+    const margeColor = !marge ? 'var(--muted)' : marge < 0 ? 'var(--danger)' : marge < 15 ? 'var(--warn)' : 'var(--ok)';
+    const pct = marge ? Math.min(Math.max(parseFloat(marge),0),100) : 0;
+    const barClass = !marge ? '' : marge < 0 ? 'low' : marge < 15 ? 'mid' : '';
+    const promoHtml = isPromoActive(a)
+      ? `<span class="prix-badge promo">-${a.promo.type==='pct'?a.promo.val+'%':fmt(a.promo.val)+' F'}</span>`
+      : `<span style="color:var(--muted);font-size:12px">—</span>`;
+    return `<tr>
+      <td><div class="art-cell">${artThumb(a)}<div><strong>${a.nom}</strong>${a.ref?`<br><span style="font-size:11px;color:var(--muted)">${a.ref}</span>`:''}</div></div></td>
+      <td><span class="prix-badge achat">${fmt(achat)} F</span></td>
+      <td><span class="prix-badge vente">${fmt(vente)} F</span></td>
+      <td>
+        <div style="min-width:80px">
+          <span style="font-weight:700;color:${margeColor};font-family:var(--fm)">${marge!==null?marge+'%':'—'}</span>
+          ${marge!==null?`<div class="marge-bar"><div class="marge-bar-fill ${barClass}" style="width:${pct}%"></div></div>`:''}
+        </div>
+      </td>
+      <td>${promoHtml}</td>
+      <td><strong style="font-family:var(--fm);color:${isPromoActive(a)?'var(--b2-c)':'var(--text)'}">${fmt(Math.round(final))} F</strong></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openPrixModal('${a.id}')">✏️ Modifier</button></td>
+    </tr>`;
+  }).join('');
+
+  // Historique
+  const histEl = document.getElementById('prix-history-table');
+  if (!histEl) return;
+  if (!db.prixHistory.length) { histEl.innerHTML = `<tr><td colspan="6"><div class="empty">Aucun changement enregistré</div></td></tr>`; return; }
+  histEl.innerHTML = db.prixHistory.slice(0,50).map(h => `<tr>
+    <td style="color:var(--muted);font-size:11px">${fmtDate(h.date)}</td>
+    <td><strong>${h.artNom}</strong></td>
+    <td><span class="prix-badge ${h.type==='achat'?'achat':'vente'}">${h.type==='achat'?'Prix achat':'Prix vente'}</span></td>
+    <td style="color:var(--muted);font-family:var(--fm)">${fmt(h.old)} F</td>
+    <td style="font-family:var(--fm);color:var(--ok)">${fmt(h.new)} F</td>
+    <td style="color:var(--muted);font-size:12px">Admin</td>
+  </tr>`).join('');
+}
+
+// =========================================================
+//  INVENTAIRE
+// =========================================================
+let invCurrentSite = 'all';
+let physiqData = {};
+
+function setInvSite(site) {
+  invCurrentSite = site;
+  document.querySelectorAll('[id^="inv-tab-"]').forEach(b => b.className = 'btn btn-ghost btn-sm');
+  const el = document.getElementById('inv-tab-'+site);
+  if (el) el.className = 'btn btn-primary btn-sm';
+  renderInventaire();
+}
+
+function renderInventaire() {
+  // Stats globales
+  const totalQte = db.articles.reduce((s,a)=>s+getTotalStock(a.id),0);
+  const totalValAchat = db.articles.reduce((s,a)=>s+(a.prixAchat||0)*getTotalStock(a.id),0);
+  const totalValVente = db.articles.reduce((s,a)=>s+prixFinal(a)*getTotalStock(a.id),0);
+  const benefPotentiel = totalValVente - totalValAchat;
+  const statsEl = document.getElementById('inv-stats-row');
+  if (statsEl) statsEl.innerHTML = `
+    <div class="stat-card"><div class="stat-label">Qté totale en stock</div><div class="stat-val">${fmt(totalQte)}</div><div class="stat-sub">toutes unités</div></div>
+    <div class="stat-card"><div class="stat-label">Valeur au coût</div><div class="stat-val" style="font-size:19px">${fmt(Math.round(totalValAchat))}</div><div class="stat-sub">FCFA — prix achat</div></div>
+    <div class="stat-card"><div class="stat-label">Valeur à la vente</div><div class="stat-val" style="font-size:19px;color:var(--ok)">${fmt(Math.round(totalValVente))}</div><div class="stat-sub">FCFA — prix vente</div></div>
+    <div class="stat-card"><div class="stat-label">Bénéfice potentiel</div><div class="stat-val" style="font-size:19px;color:var(--admin-c)">${fmt(Math.round(benefPotentiel))}</div><div class="stat-sub">FCFA si tout vendu</div></div>`;
+
+  const cont = document.getElementById('inv-content');
+  if (!cont) return;
+  const sites = invCurrentSite === 'all' ? Object.keys(SITES) : [invCurrentSite];
+
+  cont.innerHTML = sites.map(site => {
+    const siteConf = SITES[site];
+    const arts = db.articles.filter(a => getStock(a.id, site) > 0);
+    const siteQte = arts.reduce((s,a)=>s+getStock(a.id,site),0);
+    const siteValAchat = arts.reduce((s,a)=>s+(a.prixAchat||0)*getStock(a.id,site),0);
+    const siteValVente = arts.reduce((s,a)=>s+prixFinal(a)*getStock(a.id,site),0);
+    const rows = db.articles.map(a => {
+      const qte = getStock(a.id, site);
+      const valA = (a.prixAchat||0)*qte;
+      const valV = prixFinal(a)*qte;
+      const cat = db.categories.find(c=>c.id===a.cat);
+      return `<tr>
+        <td><div class="art-cell">${artThumb(a)}<div><strong>${a.nom}</strong>${a.ref?`<br><span style="font-size:11px;color:var(--muted)">${a.ref}</span>`:''}</div></div></td>
+        <td>${cat?`<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:${cat.couleur}"></span>${cat.nom}</span>`:'—'}</td>
+        <td style="font-family:var(--fm);font-weight:700">${fmt(qte)} <span style="color:var(--muted);font-size:11px">${a.unite}</span></td>
+        <td style="font-family:var(--fm);color:#4f8ef7">${fmt(Math.round(valA))} F</td>
+        <td style="font-family:var(--fm);color:var(--ok)">${fmt(Math.round(valV))} F</td>
+        <td style="font-family:var(--fm);color:var(--admin-c)">${valA>0?fmt(Math.round(valV-valA))+' F':'—'}</td>
+        <td>${statusBadge(a.id, site)}</td>
+      </tr>`;
+    }).join('');
+    return `<div class="inv-site-block">
+      <div class="inv-site-header">
+        <span style="font-size:18px">${siteConf.icon}</span>
+        <div class="inv-site-title">${siteConf.label}</div>
+        <div style="margin-left:auto;display:flex;gap:16px;font-size:12px">
+          <span style="color:var(--muted)">${fmt(siteQte)} unités</span>
+          <span style="color:#4f8ef7">Achat: ${fmt(Math.round(siteValAchat))} F</span>
+          <span style="color:var(--ok)">Vente: ${fmt(Math.round(siteValVente))} F</span>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Article</th><th>Catégorie</th><th>Quantité</th><th>Val. achat</th><th>Val. vente</th><th>Bénéfice pot.</th><th>Statut</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }).join('');
+}
+
+function startInventairePhysique() {
+  physiqData = {};
+  document.getElementById('inv-physique-section').style.display = 'block';
+  document.getElementById('inv-physique-section').scrollIntoView({behavior:'smooth'});
+  renderInventairePhysique();
+}
+
+function cancelInventairePhysique() {
+  document.getElementById('inv-physique-section').style.display = 'none';
+  physiqData = {};
+}
+
+function renderInventairePhysique() {
+  const site = document.getElementById('inv-phys-site').value;
+  const tbody = document.getElementById('inv-phys-table');
+  if (!db.articles.length) { tbody.innerHTML = `<tr><td colspan="5"><div class="empty">Aucun article</div></td></tr>`; return; }
+  tbody.innerHTML = db.articles.map(a => {
+    const systeme = getStock(a.id, site);
+    const reel = physiqData[a.id] !== undefined ? physiqData[a.id] : systeme;
+    const ecart = reel - systeme;
+    const ecartColor = ecart === 0 ? 'var(--ok)' : ecart > 0 ? 'var(--warn)' : 'var(--danger)';
+    const statut = ecart === 0 ? '<span class="badge badge-ok">Conforme</span>' : ecart > 0 ? '<span class="badge badge-warn">Excédent</span>' : '<span class="badge badge-danger">Déficit</span>';
+    return `<tr>
+      <td><div class="art-cell">${artThumb(a)}<strong>${a.nom}</strong></div></td>
+      <td style="font-family:var(--fm);font-weight:700">${fmt(systeme)} <span style="color:var(--muted);font-size:11px">${a.unite}</span></td>
+      <td><input type="number" min="0" value="${reel}" onchange="updatePhysiq('${a.id}',this.value)" style="width:100px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:7px;font-family:var(--fm);font-size:13px;outline:none"></td>
+      <td style="font-family:var(--fm);font-weight:700;color:${ecartColor}">${ecart > 0 ? '+' : ''}${ecart}</td>
+      <td>${statut}</td>
+    </tr>`;
+  }).join('');
+}
+
+function updatePhysiq(artId, val) {
+  physiqData[artId] = parseInt(val)||0;
+  renderInventairePhysique();
+}
+
+function validerInventairePhysique() {
+  const site = document.getElementById('inv-phys-site').value;
+  const ajustements = Object.keys(physiqData).filter(artId => physiqData[artId] !== getStock(artId, site));
+  if (!ajustements.length) { showToast('Aucun écart détecté','ok'); cancelInventairePhysique(); return; }
+  if (!confirm(`Ajuster ${ajustements.length} article(s) selon l'inventaire physique ?`)) return;
+  ajustements.forEach(artId => {
+    const art = db.articles.find(a=>a.id===artId); if(!art) return;
+    const before = getStock(artId, site);
+    const after = physiqData[artId];
+    if (!art.stocks) art.stocks = {};
+    art.stocks[site] = after;
+    db.mouvements.unshift({ id:uid(), artId, artNom:art.nom, site, type:'inventaire', qte:Math.abs(after-before), before, after, motif:'Ajustement inventaire physique', date:Date.now() });
+  });
+  saveDB(); renderAll();
+  cancelInventairePhysique();
+  showToast(`${ajustements.length} article(s) ajusté(s) ✓`,'ok');
+}
+
+// =========================================================
+//  INIT
+// =========================================================
+
+loadDB();
+loadAuth();
+showScreen('screen-login');
+
+// Keyboard nav for gallery
+document.addEventListener('keydown', e => {
+  const o = document.getElementById('photo-gallery-overlay');
+  if (!o || o.style.display === 'none') return;
+  if (e.key === 'ArrowRight') galleryNav(1);
+  if (e.key === 'ArrowLeft') galleryNav(-1);
+  if (e.key === 'Escape') closeGallery();
+});
+</script>
+</body>
+</html>
